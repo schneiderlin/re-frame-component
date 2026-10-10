@@ -1,0 +1,6 @@
+{:deps {:aliases [:dev]}
+ :builds
+ {:check {:target :browser
+          :output-dir ".runtime/check"
+          :asset-path "/js"
+          :modules {:main {:entries [com.zihao.re-frame-component.interface]}}}}}

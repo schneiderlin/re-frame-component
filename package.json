@@ -1,0 +1,13 @@
+{
+  "name": "re-frame-component",
+  "private": true,
+  "scripts": {
+    "test": "clojure -M:test",
+    "check:cljs": "clojure -M:dev -m shadow.cljs.devtools.cli compile check"
+  },
+  "devDependencies": {
+    "process": "0.11.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  }
+}
