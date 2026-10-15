@@ -18,6 +18,18 @@ html, body, #app { min-height: 100%; margin: 0; }
   font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
+.playbook-shell[data-embedded="true"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.playbook-shell[data-embedded="true"] .playbook-body {
+  flex: 1;
+  min-height: 0;
+}
+
 .playbook-toolbar {
   position: sticky;
   top: 0;

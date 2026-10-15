@@ -34,6 +34,7 @@
 (def playbook-match-hash playbook-route/match-hash)
 (def playbook-href playbook-route/href)
 (def playbook-current-hash playbook-shell/current-hash)
+(def playbook-catalog playbook-shell/catalog-shell)
 (def playbook-mount! playbook-shell/mount!)
 (def playbook-unmount! playbook-shell/unmount!)
 

@@ -56,10 +56,12 @@ data-shaped args, initial events, scope, and metadata. Each selected Scene runs
 inside a fresh re-frame2 frame that is destroyed on unmount, keeping product,
 catalog, and Scene state separate.
 
-Apps own fixtures and Scene declarations, register them through
-`playbook-register-scenes!`, recognize `#/playbook` before product startup, and
-mount with `playbook-mount!`. The browser inspection bridge is available as
-`globalThis.__reFrame2Playbook`. The stylesheet is served from
+Apps own fixtures and Scene declarations and register them through
+`playbook-register-scenes!`. A standalone surface can recognize `#/playbook`
+before product startup and mount with `playbook-mount!`; an app that keeps its
+own shell and navigation can render `[playbook-catalog {:embedded? true}]` as
+the content of its Playbook route. The browser inspection bridge is available
+in either mode as `globalThis.__reFrame2Playbook`. The stylesheet is served from
 `/re-frame-component/playbook.css` when this component's resources are on the
 application classpath.
 

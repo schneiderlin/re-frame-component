@@ -100,42 +100,51 @@
                                 (fn [value] (if (= value :dark) :light :dark)))}
      (if (= theme :dark) "Light" "Dark")]]])
 
-(defn catalog-shell []
-  (let [initial-route (route/match-hash (current-hash))
-        all-scenes (registry/scenes)
-        route-id (:scene-id initial-route)
-        initial-id (or route-id (:id (first all-scenes)))
-        state* (r/atom {:scene-id initial-id
-                        :query ""
-                        :scope nil
-                        :viewport :responsive
-                        :theme :light})
-        select-scene! (fn [scene-id]
-                        (swap! state* assoc :scene-id scene-id)
-                        (push-hash! (route/href scene-id)))]
-    (r/create-class
-     {:display-name "re-frame2-playbook"
-      :component-did-mount
-      (fn [_this]
-        (when (and initial-id (nil? route-id))
-          (replace-hash! (route/href initial-id)))
-        (let [listener (fn [_]
-                         (when-let [matched (route/match-hash (current-hash))]
-                           (swap! state* assoc :scene-id (:scene-id matched))))]
-          (.addEventListener js/window "hashchange" listener)
-          (reset! hash-listener* listener)))
-      :component-will-unmount
-      (fn [_this]
-        (when-let [listener @hash-listener*]
-          (.removeEventListener js/window "hashchange" listener)
-          (reset! hash-listener* nil)))
-      :reagent-render
-      (fn []
-        (let [{:keys [scene-id query scope viewport theme] :as state} @state*
-              selected (registry/scene scene-id)
-              visible (model/filter-scenes all-scenes {:query query :scope scope})
-              width (get viewport-widths viewport)]
-          [:div.playbook-shell {:data-theme (name theme)}
+(defn catalog-shell
+  ([] (catalog-shell {}))
+  ([{:keys [embedded?]}]
+   (let [initial-route (route/match-hash (current-hash))
+         all-scenes (registry/scenes)
+         route-id (:scene-id initial-route)
+         initial-id (or route-id (:id (first all-scenes)))
+         root-node* (atom nil)
+         state* (r/atom {:scene-id initial-id
+                         :query ""
+                         :scope nil
+                         :viewport :responsive
+                         :theme :light})
+         select-scene! (fn [scene-id]
+                         (swap! state* assoc :scene-id scene-id)
+                         (push-hash! (route/href scene-id)))]
+     (r/create-class
+      {:display-name "re-frame2-playbook"
+       :component-did-mount
+       (fn [_this]
+         (when (and initial-id (nil? route-id))
+           (replace-hash! (route/href initial-id)))
+         (when-let [root-node @root-node*]
+           (agent/install! root-node select-scene!))
+         (let [listener (fn [_]
+                          (when-let [matched (route/match-hash (current-hash))]
+                            (swap! state* assoc :scene-id (:scene-id matched))))]
+           (.addEventListener js/window "hashchange" listener)
+           (reset! hash-listener* listener)))
+       :component-will-unmount
+       (fn [_this]
+         (when-let [listener @hash-listener*]
+           (.removeEventListener js/window "hashchange" listener)
+           (reset! hash-listener* nil))
+         (agent/uninstall!))
+       :reagent-render
+       (fn []
+         (let [{:keys [scene-id query scope viewport theme] :as state} @state*
+               selected (registry/scene scene-id)
+               visible (model/filter-scenes all-scenes {:query query :scope scope})
+               width (get viewport-widths viewport)]
+           [:div.playbook-shell
+            {:data-theme (name theme)
+             :data-embedded (str (boolean embedded?))
+             :ref #(reset! root-node* %)}
            [toolbar state (partial swap! state*)]
            [:div.playbook-body
             [:aside.playbook-catalog
@@ -174,15 +183,10 @@
                  {:data-viewport (name viewport)
                   :data-theme (name theme)
                   :style (when width {:width (str width "px")})}
-                 ^{:key (str scene-id)} [scene-host selected]]])]]]))})))
+                 ^{:key (str scene-id)} [scene-host selected]]])]]]))}))))
 
 (defn mount! [dom-node]
   (let [root (or @root* (reset! root* (rdom/create-root dom-node)))]
-    (agent/install!
-     dom-node
-     (fn [scene-id]
-       (replace-hash! (route/href scene-id))
-       (.dispatchEvent js/window (js/Event. "hashchange"))))
     (.render root (r/as-element [catalog-shell]))
     root))
 
@@ -190,5 +194,4 @@
   (when-let [root @root*]
     (.unmount root)
     (reset! root* nil))
-  (agent/uninstall!)
   nil)
