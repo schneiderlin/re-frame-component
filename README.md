@@ -1,8 +1,8 @@
 # Re-Frame Component
 
-Reusable Reagent UI primitives and legacy routing helpers for re-frame2 apps.
-Applications own domain state, validation, resource effects, copy and styling.
-This is an independent library, not an official day8 project.
+Reusable Reagent UI primitives, Web UI Playbook, and legacy routing helpers for
+re-frame2 apps. Applications own domain state, validation, resource effects,
+copy and styling. This is an independent library, not an official day8 project.
 
 ## Dependencies
 
@@ -47,6 +47,21 @@ Applications may instead mount this repository as a Git submodule at their
 existing component path and keep a `:local/root` dependency. Initialize it with
 `git submodule update --init --recursive`; consumers should pin the same commit
 whether they use a submodule or a tools.deps Git dependency.
+
+## Web UI Playbook
+
+The public interface exposes a shared Catalog and Stage for flat, independently
+addressable Scenes. A Scene names a registered re-frame2 view and contains only
+data-shaped args, initial events, scope, and metadata. Each selected Scene runs
+inside a fresh re-frame2 frame that is destroyed on unmount, keeping product,
+catalog, and Scene state separate.
+
+Apps own fixtures and Scene declarations, register them through
+`playbook-register-scenes!`, recognize `#/playbook` before product startup, and
+mount with `playbook-mount!`. The browser inspection bridge is available as
+`globalThis.__reFrame2Playbook`. The stylesheet is served from
+`/re-frame-component/playbook.css` when this component's resources are on the
+application classpath.
 
 ## IME-safe inputs
 
@@ -96,7 +111,7 @@ clojure -M:test
 npm run check:cljs
 ```
 
-The JVM suite runs the existing pure route, activation, multi-step, range and
+The JVM suite runs the pure Playbook, route, activation, multi-step, range and
 table-filter model tests. The CLJS check compiles the complete public interface
 and all its dependencies into an isolated output directory; it is not a browser
 interaction test or an IME compatibility guarantee.

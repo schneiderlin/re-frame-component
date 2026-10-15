@@ -1,5 +1,9 @@
 (ns com.zihao.re-frame-component.interface
   (:require
+   [com.zihao.re-frame-component.playbook.model :as playbook-model]
+   [com.zihao.re-frame-component.playbook.registry :as playbook-registry]
+   [com.zihao.re-frame-component.playbook.route :as playbook-route]
+   [com.zihao.re-frame-component.playbook.shell :as playbook-shell]
    [com.zihao.re-frame-component.router.activation :as router-activation]
    [com.zihao.re-frame-component.router.event :as router-event]
    [com.zihao.re-frame-component.router.model :as router-model]
@@ -16,6 +20,22 @@
    [com.zihao.re-frame-component.ui.navbar :as navbar]
    [com.zihao.re-frame-component.ui.popup :as popup]
    [com.zihao.re-frame-component.ui.tabs :as tabs]))
+
+(def playbook-scene-id playbook-model/scene-id)
+(def playbook-normalize-scene playbook-model/normalize-scene)
+(def playbook-module-scenes playbook-model/module-scenes)
+(def playbook-filter-scenes playbook-model/filter-scenes)
+(def playbook-clear! playbook-registry/clear!)
+(def playbook-register-scene! playbook-registry/reg-scene!)
+(def playbook-register-scenes! playbook-registry/reg-scenes!)
+(def playbook-scene playbook-registry/scene)
+(def playbook-scenes playbook-registry/scenes)
+(def playbook-hash? playbook-route/playbook-hash?)
+(def playbook-match-hash playbook-route/match-hash)
+(def playbook-href playbook-route/href)
+(def playbook-current-hash playbook-shell/current-hash)
+(def playbook-mount! playbook-shell/mount!)
+(def playbook-unmount! playbook-shell/unmount!)
 
 (def popup-frame popup/popup-frame)
 

@@ -10,6 +10,18 @@ persistence, query translation, localization and styling. Components expose
 stable semantic attributes and callbacks, not a cross-application theme.
 Components that accept re-frame action vectors use the host's configured frame.
 
+## Web UI Playbook
+
+The Playbook owns generic Catalog, Stage, registry, route, lifecycle, stylesheet,
+and browser-inspection behavior. Apps own deterministic fixtures, Scene
+declarations, catalog aggregation, and startup routing. Scene declarations are
+data rather than runtime closures and name real registered re-frame2 views.
+
+Every selected Scene receives a new re-frame2 frame. Unmounting destroys that
+exact frame. Catalog controls do not live in Scene app-db, and mounting the
+Playbook must not start product authentication, routing, resource loading, or
+WebSocket effects.
+
 ## Multi-step flows
 
 The model derives complete, active and upcoming states from ordered steps,
