@@ -56,14 +56,31 @@ data-shaped args, initial events, scope, and metadata. Each selected Scene runs
 inside a fresh re-frame2 frame that is destroyed on unmount, keeping product,
 catalog, and Scene state separate.
 
-Apps own fixtures and Scene declarations and register them through
-`playbook-register-scenes!`. A standalone surface can recognize `#/playbook`
-before product startup and mount with `playbook-mount!`; an app that keeps its
-own shell and navigation can render `[playbook-catalog {:embedded? true}]` as
-the content of its Playbook route. The browser inspection bridge is available
-in either mode as `globalThis.__reFrame2Playbook`. The stylesheet is served from
-`/re-frame-component/playbook.css` when this component's resources are on the
-application classpath.
+Apps own fixtures, Scene declarations, and catalog aggregation. Modules declare
+Scenes as data with `playbook-module-scenes`; the app assembles them with the
+pure `playbook-catalog-scenes` and passes the result to the shell as `:scenes`
+(a deref-able). There is no process-global catalog, so an app can add Scenes at
+any time — including from a lazily loaded module — by updating that source.
+
+```clojure
+;; app-owned aggregation
+(def once-scenes (r/atom (rfc/playbook-catalog-scenes
+                          (navigation/scenes)
+                          (release-card/scenes))))
+
+;; embedded in the app's own shell
+[rfc/playbook-catalog {:embedded? true :scenes once-scenes}]
+
+;; or a standalone surface that recognizes #/playbook before product startup
+(rfc/playbook-mount! dom-node {:scenes once-scenes})
+```
+
+Because the shell derefs `:scenes` inside its render fn, a Reaction or ratom
+source re-renders the Catalog in place; the selected Scene is not remounted and
+keeps its frame. The browser inspection bridge is available in either mode as
+`globalThis.__reFrame2Playbook`, and reports the same source. The stylesheet is
+served from `/re-frame-component/playbook.css` when this component's resources
+are on the application classpath.
 
 ## IME-safe inputs
 

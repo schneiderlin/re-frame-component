@@ -1,7 +1,7 @@
 (ns com.zihao.re-frame-component.playbook.agent
   "Browser bridge for deterministic access to the mounted Playbook."
   (:require
-   [com.zihao.re-frame-component.playbook.registry :as registry]
+   [com.zihao.re-frame-component.playbook.model :as model]
    [com.zihao.re-frame-component.playbook.route :as route]
    [re-frame.core :as rf]))
 
@@ -36,9 +36,11 @@
            :tags (mapv id->str (sort-by str tags))}
     doc (assoc :doc doc)))
 
-(defn catalog-data []
+(defn catalog-data
+  "Serializable catalog for `globalThis.__reFrame2Playbook.catalog()`."
+  [scenes]
   {:version bridge-version
-   :scenes (mapv scene-entry (registry/scenes))})
+   :scenes (mapv scene-entry scenes)})
 
 (defn selection-data []
   {:scene-id (id->str @selected-scene*)
@@ -75,21 +77,25 @@
                              :message (.-message error)}))))))
 
 (defn install!
-  [dom-node select-scene!]
+  "Install the bridge on `dom-node`.
+
+  `scenes` is the same deref-able Scene source the Catalog renders, so the
+  bridge reports and validates against the host's current catalog."
+  [dom-node scenes select-scene!]
   (reset! active-node* dom-node)
   (.setAttribute dom-node "data-re-frame2-playbook" "true")
   (aset js/globalThis
         "__reFrame2Playbook"
         (js-obj
          "version" bridge-version
-         "catalog" (js-result catalog-data)
+         "catalog" (js-result (fn [] (catalog-data @scenes)))
          "selection" (js-result selection-data)
          "inspect" (js-result inspect-data)
          "selectScene"
          (js-result
           (fn [scene-id]
             (let [scene-id (route/id-string->keyword scene-id)]
-              (if (registry/scene scene-id)
+              (if (model/find-scene @scenes scene-id)
                 (do (select-scene! scene-id)
                     {:ok? true :selection (selection-data)})
                 {:ok? false :reason :unknown-scene :scene-id scene-id}))))))

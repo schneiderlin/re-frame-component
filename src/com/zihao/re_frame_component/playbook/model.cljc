@@ -75,6 +75,31 @@
                   options)))
         states))
 
+(defn catalog-scenes
+  "Assemble Scene declarations from one or more modules into a stable Catalog.
+
+  Accepts any number of module Scene vectors, flattens them, validates every
+  declaration, and returns a duplicate-free vector ordered by Scene id. Later
+  declarations for the same `:id` win, matching the previous register-order
+  semantics. The result is plain data; the Catalog is a function of whatever the
+  host assembles, not process-global state."
+  [& module-scenes]
+  (->> (apply concat module-scenes)
+       (reduce (fn [by-id scene]
+                 (let [scene (normalize-scene scene)]
+                   (assoc by-id (:id scene) scene)))
+               {})
+       vals
+       (sort-by (comp str :id))
+       vec))
+
+(defn find-scene
+  "Return the Scene with `scene-id`, or nil."
+  [scenes scene-id]
+  (some (fn [scene]
+          (when (= scene-id (:id scene)) scene))
+        scenes))
+
 (defn searchable-text [{:keys [id title doc tags]}]
   (str/lower-case
    (str id " "

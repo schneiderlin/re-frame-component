@@ -39,3 +39,59 @@
                                              {:query "button"
                                               :scope :element
                                               :tag :demo})))))))
+
+(deftest catalog-assembles-deterministic-scene-order
+  (let [scenes (model/catalog-scenes
+                (model/module-scenes
+                 {:app-ns "demo.app" :module-id :zebra
+                  :component :demo/zebra :tags #{:z}
+                  :states [[:default {}]]})
+                (model/module-scenes
+                 {:app-ns "demo.app" :module-id :alpha
+                  :component :demo/alpha :tags #{:a}
+                  :states [[:default {}]]}))]
+    (is (= [:demo.app.ui.alpha/default
+            :demo.app.ui.zebra/default]
+           (mapv :id scenes)))
+    (testing "module assembly order does not change the catalog order"
+      (is (= (mapv :id scenes)
+             (mapv :id (apply model/catalog-scenes
+                              (reverse
+                               [(model/module-scenes
+                                 {:app-ns "demo.app" :module-id :zebra
+                                  :component :demo/zebra :tags #{:z}
+                                  :states [[:default {}]]})
+                                (model/module-scenes
+                                 {:app-ns "demo.app" :module-id :alpha
+                                  :component :demo/alpha :tags #{:a}
+                                  :states [[:default {}]]})]))))))))
+
+(deftest catalog-keeps-last-declaration-per-scene-id
+  (let [first-declaration (model/module-scenes
+                           {:app-ns "demo.app" :module-id :panel
+                            :component :demo/panel
+                            :states [[:default {:variant :old}]]})
+        later-declaration (model/module-scenes
+                           {:app-ns "demo.app" :module-id :panel
+                            :component :demo/panel
+                            :states [[:default {:variant :new}]]})
+        scenes (model/catalog-scenes first-declaration later-declaration)]
+    (is (= 1 (count scenes)))
+    (is (= {:variant :new} (:args (first scenes))))))
+
+(deftest catalog-validates-every-declaration
+  (is (thrown-with-msg?
+       clojure.lang.ExceptionInfo
+       #"must be a registered view id"
+       (model/catalog-scenes [{:id :demo/broken
+                               :component "demo/broken"}]))))
+
+(deftest find-scene-returns-matching-scene-or-nil
+  (let [scenes (model/catalog-scenes
+                (model/module-scenes
+                 {:app-ns "demo.app" :module-id :panel
+                  :component :demo/panel
+                  :states [[:default {}]]}))]
+    (is (= :demo.app.ui.panel/default
+           (:id (model/find-scene scenes :demo.app.ui.panel/default))))
+    (is (nil? (model/find-scene scenes :demo.app.ui.missing/default)))))

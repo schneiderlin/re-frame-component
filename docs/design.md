@@ -12,10 +12,18 @@ Components that accept re-frame action vectors use the host's configured frame.
 
 ## Web UI Playbook
 
-The Playbook owns generic Catalog, Stage, registry, route, lifecycle, stylesheet,
-and browser-inspection behavior. Apps own deterministic fixtures, Scene
+The Playbook owns generic Catalog, Stage, route, lifecycle, stylesheet, and
+browser-inspection behavior. Apps own deterministic fixtures, Scene
 declarations, catalog aggregation, and startup routing. Scene declarations are
 data rather than runtime closures and name real registered re-frame2 views.
+
+The Catalog is a function of a host-supplied Scene collection, not a
+process-global registry: apps assemble declarations with the pure
+`catalog-scenes` and pass them to the shell or mount entry point as a
+deref-able. The shell derefs that source inside its render fn, so Scenes appended
+later — for example from a lazily loaded module — appear without remounting the
+selected Scene. A single source feeds the sidebar, Scene lookup, and the
+browser-inspection bridge, so those three cannot disagree.
 
 Every selected Scene receives a new re-frame2 frame. Unmounting destroys that
 exact frame. Catalog controls do not live in Scene app-db, and mounting the
