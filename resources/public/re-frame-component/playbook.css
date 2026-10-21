@@ -91,8 +91,8 @@ html, body, #app { min-height: 100%; margin: 0; }
 @media (max-width: 760px) {
   .playbook-toolbar { align-items: flex-start; }
   .playbook-control span { display: none; }
-  .playbook-body { grid-template-columns: 1fr; }
-  .playbook-catalog { border-right: 0; border-bottom: 1px solid var(--playbook-line); }
+  .playbook-body { grid-template-columns: minmax(0, 1fr); }
+  .playbook-catalog { min-width: 0; border-right: 0; border-bottom: 1px solid var(--playbook-line); }
   .playbook-catalog__filters { position: static; }
   .playbook-scene-list { display: flex; overflow-x: auto; }
   .playbook-scene-link { min-width: 190px; }
