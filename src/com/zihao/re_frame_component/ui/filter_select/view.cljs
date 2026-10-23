@@ -2,6 +2,7 @@
   (:require
    [clojure.string :as str]
    [com.zihao.re-frame-component.ui.filter-select.model :as model]
+   [com.zihao.re-frame-component.ui.ime-safe :as ime-safe]
    [reagent.core :as r]))
 
 (defn- merge-attrs
@@ -22,10 +23,6 @@
   (cond-> (or attrs {})
     class-name
     (update :class #(if (seq %) (str % " " class-name) class-name))))
-
-(defn- target-value
-  [event]
-  (.. event -target -value))
 
 (defn- dom-token
   [value]
@@ -198,29 +195,30 @@
                   label-options)
           label])
        [:div.rf-filter-select__control
-        [:input (merge-attrs
-                 {:id (input-id component-id)
-                  :class "rf-filter-select__input"
-                  :type "text"
-                  :role "combobox"
-                  :aria-autocomplete "list"
-                  :aria-expanded (str (boolean open?))
-                  :aria-controls (listbox-id component-id)
-                  :aria-activedescendant active-option-id
-                  :auto-complete "off"
-                  :spell-check false
-                  :placeholder placeholder
-                  :disabled disabled?
-                  :value input-value
-                  :on-focus #(when-not disabled?
-                               (open! local-state))
-                  :on-change #(swap! local-state assoc
-                                      :open? true
-                                      :query (target-value %)
-                                      :active-index 0)
-                  :on-key-down #(handle-key-down % local-state filtered-options opts)
-                  :on-blur #(close! local-state)}
-                 input-options)]]
+        [ime-safe/input (merge-attrs
+                         {:id (input-id component-id)
+                          :class "rf-filter-select__input"
+                          :type "text"
+                          :role "combobox"
+                          :aria-autocomplete "list"
+                          :aria-expanded (str (boolean open?))
+                          :aria-controls (listbox-id component-id)
+                          :aria-activedescendant active-option-id
+                          :auto-complete "off"
+                          :spell-check false
+                          :placeholder placeholder
+                          :disabled disabled?
+                          :value input-value
+                          :on-value (fn [value]
+                                      (swap! local-state assoc
+                                             :open? true
+                                             :query value
+                                             :active-index 0))
+                          :on-focus #(when-not disabled?
+                                       (open! local-state))
+                          :on-key-down #(handle-key-down % local-state filtered-options opts)
+                          :on-blur #(close! local-state)}
+                         input-options)]]
        (when open?
          (into [:ul (merge-attrs
                      {:id (listbox-id component-id)
