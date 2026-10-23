@@ -143,6 +143,10 @@
       nil)))
 
 (defn filter-select
+  "Headless searchable single-select. Owns combobox state, keyboard/IME behavior,
+  ARIA wiring, and the root positioning context. Callers own product styling via
+  the root/control/input/menu/option attrs and may supply a passive
+  :end-adornment; popup versus in-flow menu layout is a caller concern."
   [{:keys [id
            label
            options
@@ -152,10 +156,12 @@
            class
            attrs
            label-options
+           control-options
            input-options
            menu-options
            empty-options
-           empty-label]
+           empty-label
+           end-adornment]
     :or {placeholder "Filter..."
          empty-label "No options"}
     :as opts}]
@@ -184,7 +190,8 @@
                      {:data-component "re-frame-filter-select"
                       :data-component-id (str component-id)
                       :data-state (if open? "open" "closed")
-                      :data-disabled (str disabled?)}
+                      :data-disabled (str disabled?)
+                      :style {:position "relative"}}
                      attrs)
               class
               (with-class class))
@@ -194,7 +201,9 @@
                    :class "rf-filter-select__label"}
                   label-options)
           label])
-       [:div.rf-filter-select__control
+       [:div (merge-attrs
+              {:class "rf-filter-select__control"}
+              control-options)
         [ime-safe/input (merge-attrs
                          {:id (input-id component-id)
                           :class "rf-filter-select__input"
@@ -218,7 +227,8 @@
                                        (open! local-state))
                           :on-key-down #(handle-key-down % local-state filtered-options opts)
                           :on-blur #(close! local-state)}
-                         input-options)]]
+                         input-options)]
+        end-adornment]
        (when open?
          (into [:ul (merge-attrs
                      {:id (listbox-id component-id)
