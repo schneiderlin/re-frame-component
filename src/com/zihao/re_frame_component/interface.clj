@@ -7,13 +7,17 @@
 
 (def playbook-scene-id playbook-model/scene-id)
 (def playbook-normalize-scene playbook-model/normalize-scene)
+(def playbook-normalize-tool playbook-model/normalize-tool)
 (def playbook-module-scenes playbook-model/module-scenes)
 (def playbook-catalog-scenes playbook-model/catalog-scenes)
+(def playbook-catalog-tools playbook-model/catalog-tools)
 (def playbook-find-scene playbook-model/find-scene)
+(def playbook-find-tool playbook-model/find-tool)
 (def playbook-filter-scenes playbook-model/filter-scenes)
 (def playbook-hash? playbook-route/playbook-hash?)
 (def playbook-match-hash playbook-route/match-hash)
 (def playbook-href playbook-route/href)
+(def playbook-tool-href playbook-route/tool-href)
 
 (def router-activation-route-key router-activation/route-key)
 (def router-activation-same-route? router-activation/same-route?)

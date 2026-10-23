@@ -6,8 +6,12 @@ packaging, not public namespaces, event semantics or UI behavior.
 ## Application ownership
 
 Applications own app-db paths, business validation, resource loading,
-persistence, query translation, localization and styling. Components expose
-stable semantic attributes and callbacks, not a cross-application theme.
+persistence, query translation and localization. Product styling belongs to an
+app-scoped visual facade such as `web-ui`, not to this behavior component or to
+each feature call site. Components expose stable semantic attributes and
+callbacks, not a cross-application theme. Interaction components own their
+focus, accessibility and overlay-layout mechanics so visual facades do not
+require positioned-parent or z-index repairs from product callers.
 Components that accept re-frame action vectors use the host's configured frame.
 
 ## Web UI Playbook

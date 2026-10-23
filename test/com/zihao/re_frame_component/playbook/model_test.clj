@@ -26,6 +26,43 @@
          :component :demo/button
          :args {:on-click (fn [])}}))))
 
+(deftest tool-destinations-normalize-as-data
+  (is (= {:id :design-system
+          :title {:en "Design System" :zh "设计系统"}
+          :component :demo.design-system/workspace
+          :args {}}
+         (model/normalize-tool
+          {:id :design-system
+           :title {:en "Design System" :zh "设计系统"}
+           :component :demo.design-system/workspace})))
+  (testing "tool identity, title, component, and data shape are validated"
+    (doseq [tool [{:id "design-system"
+                   :title "Design System"
+                   :component :demo/workspace}
+                  {:id :design-system
+                   :title {:en :not-a-string}
+                   :component :demo/workspace}
+                  {:id :design-system
+                   :title "Design System"
+                   :component "demo/workspace"}
+                  {:id :design-system
+                   :title "Design System"
+                   :component :demo/workspace
+                   :args {:render (fn [])}}]]
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (model/normalize-tool tool))))))
+
+(deftest catalog-tools-are-stable-and-duplicate-free
+  (let [tools (model/catalog-tools
+               [{:id :tokens :title "Old" :component :demo/old}
+                {:id :accessibility :title "Accessibility" :component :demo/a11y}
+                {:id :tokens :title "Tokens" :component :demo/tokens
+                 :args {:palette :dark}}])]
+    (is (= [:accessibility :tokens] (mapv :id tools)))
+    (is (= :demo/tokens (:component (model/find-tool tools :tokens))))
+    (is (= {:palette :dark} (:args (model/find-tool tools :tokens))))
+    (is (nil? (model/find-tool tools :missing)))))
+
 (deftest catalog-filtering-composes-query-scope-and-tag
   (let [scenes [(model/normalize-scene
                  {:id :demo/button :title "Action Button"

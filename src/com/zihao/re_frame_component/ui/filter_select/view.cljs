@@ -73,21 +73,28 @@
         option-id (model/option-id option opts)
         active? (= index (:active-index @local-state))
         selected? (= selected-id option-id)
+        disabled? (model/option-disabled? option opts)
         ctx {:active? active?
              :selected? selected?
+             :disabled? disabled?
              :index index}
         attrs (merge-attrs
-               {:id (option-dom-id component-id option-id index)
-                :role "option"
-                :data-component "re-frame-filter-select-option"
-                :data-option-id (str option-id)
-                :data-active (str (boolean active?))
-                :data-selected (str (boolean selected?))
-                :aria-selected (str (boolean selected?))
-                :on-mouse-enter #(swap! local-state assoc :active-index index)
-                :on-mouse-down (fn [event]
-                                 (.preventDefault event)
-                                 (select-option! local-state on-select option))}
+               (merge-attrs
+                {:id (option-dom-id component-id option-id index)
+                 :role "option"
+                 :data-component "re-frame-filter-select-option"
+                 :data-option-id (str option-id)
+                 :data-active (str (boolean active?))
+                 :data-selected (str (boolean selected?))
+                 :data-disabled (str disabled?)
+                 :aria-selected (str (boolean selected?))
+                 :aria-disabled (str disabled?)
+                 :on-mouse-enter #(when-not disabled?
+                                    (swap! local-state assoc :active-index index))}
+                (when-not disabled?
+                  {:on-mouse-down (fn [event]
+                                    (.preventDefault event)
+                                    (select-option! local-state on-select option))}))
                (option-attrs option ctx option-options))]
     [:li (with-class attrs "rf-filter-select__option")
      (if render-option
@@ -120,20 +127,25 @@
         (.preventDefault event)
         (swap! local-state assoc
                :open? true
-               :active-index (model/bounded-index (inc active-index) option-count)))
+               :active-index (or (model/selectable-index filtered-options
+                                                         active-index 1 opts)
+                                 active-index)))
 
       "ArrowUp"
       (do
         (.preventDefault event)
         (swap! local-state assoc
                :open? true
-               :active-index (model/bounded-index (dec active-index) option-count)))
+               :active-index (or (model/selectable-index filtered-options
+                                                         active-index -1 opts)
+                                 active-index)))
 
       "Enter"
       (when open?
         (.preventDefault event)
         (when-let [option (nth filtered-options active-index nil)]
-          (select-option! local-state (:on-select opts) option)))
+          (when-not (model/option-disabled? option opts)
+            (select-option! local-state (:on-select opts) option))))
 
       "Escape"
       (do
@@ -144,13 +156,14 @@
 
 (defn filter-select
   "Headless searchable single-select. Owns combobox state, keyboard/IME behavior,
-  ARIA wiring, and the root positioning context. Callers own product styling via
-  the root/control/input/menu/option attrs and may supply a passive
-  :end-adornment; popup versus in-flow menu layout is a caller concern."
+  ARIA wiring, root positioning context, and anchored versus inline menu layout.
+  Visual facades own product styling via the root/control/input/menu/option attrs
+  and may supply a passive :end-adornment."
   [{:keys [id
            label
            options
            selected-id
+           default-open?
            placeholder
            disabled?
            class
@@ -159,13 +172,15 @@
            control-options
            input-options
            menu-options
+           menu-layout
            empty-options
            empty-label
            end-adornment]
     :or {placeholder "Filter..."
+         menu-layout :anchored
          empty-label "No options"}
     :as opts}]
-  (r/with-let [local-state (r/atom {:open? false
+  (r/with-let [local-state (r/atom {:open? (boolean default-open?)
                                     :query ""
                                     :active-index 0})
                generated-id (str "rf-filter-select-" (random-uuid))]
@@ -234,7 +249,14 @@
                      {:id (listbox-id component-id)
                       :class "rf-filter-select__listbox"
                       :role "listbox"
-                      :data-component "re-frame-filter-select-listbox"}
+                      :data-component "re-frame-filter-select-listbox"
+                      :data-layout (name menu-layout)
+                      :style (if (= :inline menu-layout)
+                               {:position "relative"}
+                               {:left 0
+                                :position "absolute"
+                                :top "100%"
+                                :width "100%"})}
                      menu-options)]
                (if (seq filtered-options)
                  (map-indexed

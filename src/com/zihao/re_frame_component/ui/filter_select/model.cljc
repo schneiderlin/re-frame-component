@@ -29,6 +29,12 @@
   (when-let [selector (:option-description opts)]
     ((value-accessor selector (constantly nil)) option)))
 
+(defn option-disabled?
+  [option opts]
+  (boolean
+   (when-let [selector (:option-disabled? opts)]
+     ((value-accessor selector (constantly false)) option))))
+
 (defn query-tokens
   [query]
   (->> (str/split (str/lower-case (str/trim (or query ""))) #"\s+")
@@ -83,3 +89,16 @@
     (neg? index) 0
     (>= index item-count) (dec item-count)
     :else index))
+
+(defn selectable-index
+  "Return the next enabled option index, wrapping in `direction`. Returns nil
+  when every option is disabled or the collection is empty."
+  [options current-index direction opts]
+  (let [options (vec options)
+        option-count (count options)]
+    (when (pos? option-count)
+      (some (fn [step]
+              (let [index (mod (+ current-index (* direction step)) option-count)]
+                (when-not (option-disabled? (nth options index) opts)
+                  index)))
+            (range 1 (inc option-count))))))
