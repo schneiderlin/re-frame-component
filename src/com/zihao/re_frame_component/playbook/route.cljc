@@ -33,10 +33,12 @@
 (defn match-hash [hash]
   (when (playbook-hash? hash)
     (let [[path query] (str/split (subs (or hash "") 2) #"\?" 2)
-          params (query-map query)]
-      {:surface :playbook
-       :path path
-       :scene-id (id-string->keyword (:scene params))})))
+          params (query-map query)
+          tool-id (id-string->keyword (:tool params))]
+      (cond-> {:surface :playbook
+               :path path
+               :scene-id (when-not tool-id (id-string->keyword (:scene params)))}
+        tool-id (assoc :tool-id tool-id)))))
 
 (defn href
   ([] "#/playbook")
@@ -44,3 +46,14 @@
    (str "#/playbook"
         (when scene-id
           (str "?scene=" (url-encode (str scene-id)))))))
+
+(defn tool-href
+  "Render a Playbook location for a Catalog tool destination."
+  [tool-id]
+  (str "#/playbook"
+       (when tool-id
+         (let [value (str tool-id)]
+           (str "?tool="
+                (url-encode (if (keyword? tool-id)
+                              (subs value 1)
+                              value)))))))

@@ -58,6 +58,51 @@
                :tags (set (or tags #{}))
                :scope scope))))
 
+(defn- tool-title? [title]
+  (or (string? title)
+      (and (map? title)
+           (seq title)
+           (every? (fn [[locale value]]
+                     (and (keyword? locale) (string? value)))
+                   title))))
+
+(defn normalize-tool
+  "Validate and normalize a host-supplied Catalog tool destination."
+  [{:keys [id title component args] :as tool}]
+  (when-not (keyword? id)
+    (throw (ex-info "Playbook tool :id must be a keyword" {:tool tool})))
+  (when-not (tool-title? title)
+    (throw (ex-info "Playbook tool :title must be a string or localized string map"
+                    {:tool-id id :title title})))
+  (when-not (keyword? component)
+    (throw (ex-info "Playbook tool :component must be a registered view id"
+                    {:tool-id id :component component})))
+  (when-not (data-shaped? tool)
+    (throw (ex-info "Playbook tool declarations must not contain functions"
+                    {:tool-id id})))
+  (assoc tool :args (or args {})))
+
+(defn catalog-tools
+  "Validate tool destinations and return a duplicate-free, stable Catalog.
+
+  Later declarations for the same `:id` win."
+  [tools]
+  (->> tools
+       (reduce (fn [by-id tool]
+                 (let [tool (normalize-tool tool)]
+                   (assoc by-id (:id tool) tool)))
+               {})
+       vals
+       (sort-by (comp str :id))
+       vec))
+
+(defn find-tool
+  "Return the tool destination with `tool-id`, or nil."
+  [tools tool-id]
+  (some (fn [tool]
+          (when (= tool-id (:id tool)) tool))
+        tools))
+
 (defn module-scenes
   "Expand module states into flat, independently addressable scenes.
 
