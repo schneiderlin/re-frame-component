@@ -20,7 +20,7 @@
   (let [node (atom nil)
         composing? (atom false)
         last-external-value (atom nil)]
-    (fn [{:keys [value on-value] :as props}]
+    (fn [{:keys [value on-value on-blur] :as props}]
       (sync-external-value! node composing? last-external-value value)
       [tag
        (-> props
@@ -38,7 +38,9 @@
                                    (on-value (event-value event)))))
                   :on-blur (fn [event]
                              (when on-value
-                               (on-value (event-value event))))))])))
+                               (on-value (event-value event)))
+                             (when on-blur
+                               (on-blur event)))))])))
 
 (defn input
   [props]

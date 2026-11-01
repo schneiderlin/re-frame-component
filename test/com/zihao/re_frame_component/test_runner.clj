@@ -4,6 +4,7 @@
             [com.zihao.re-frame-component.playbook.route-test]
             [com.zihao.re-frame-component.router.activation-test]
             [com.zihao.re-frame-component.router.model-test]
+            [com.zihao.re-frame-component.ui.filter-select.model-test]
             [com.zihao.re-frame-component.ui.multi-step.model-test]
             [com.zihao.re-frame-component.ui.optional-range.model-test]
             [com.zihao.re-frame-component.ui.table-filter.model-test]))
@@ -15,6 +16,7 @@
          'com.zihao.re-frame-component.playbook.route-test
          'com.zihao.re-frame-component.router.activation-test
          'com.zihao.re-frame-component.router.model-test
+         'com.zihao.re-frame-component.ui.filter-select.model-test
          'com.zihao.re-frame-component.ui.multi-step.model-test
          'com.zihao.re-frame-component.ui.optional-range.model-test
          'com.zihao.re-frame-component.ui.table-filter.model-test)]
