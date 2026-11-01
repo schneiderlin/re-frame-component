@@ -366,6 +366,8 @@
                                              :active-index 0))
                           :on-focus #(when-not disabled?
                                        (open! local-state))
+                          :on-click #(when (and (not disabled?) (not (:open? @local-state)))
+                                       (open! local-state))
                           :on-key-down #(handle-key-down % local-state filtered-options opts)
                           :on-blur #(close! local-state)}
                          input-options)]
