@@ -7,18 +7,15 @@
    [com.zihao.re-frame-component.router.event :as router-event]
    [com.zihao.re-frame-component.router.model :as router-model]
    [com.zihao.re-frame-component.router.sub :as router-sub]
-   [com.zihao.re-frame-component.ui.filter-select.model :as filter-select-model]
-   [com.zihao.re-frame-component.ui.filter-select.view :as filter-select-view]
-   [com.zihao.re-frame-component.ui.ime-safe :as ime-safe]
-   [com.zihao.re-frame-component.ui.multi-step.view :as multi-step]
-   [com.zihao.re-frame-component.ui.optional-range.model :as optional-range-model]
-   [com.zihao.re-frame-component.ui.optional-range.view :as optional-range-view]
-   [com.zihao.re-frame-component.ui.table-filter.model :as table-filter-model]
-   [com.zihao.re-frame-component.ui.table-filter.view :as table-filter-view]
-   [com.zihao.re-frame-component.ui.tag :as tag-view]
-   [com.zihao.re-frame-component.ui.navbar :as navbar]
-   [com.zihao.re-frame-component.ui.popup :as popup]
-   [com.zihao.re-frame-component.ui.tabs :as tabs]))
+   [com.zihao.re-frame-component.ui.filter-select.interface :as filter-select]
+   [com.zihao.re-frame-component.ui.ime-safe.interface :as ime-safe]
+   [com.zihao.re-frame-component.ui.multi-step.interface :as multi-step]
+   [com.zihao.re-frame-component.ui.navbar.interface :as navbar]
+   [com.zihao.re-frame-component.ui.optional-range.interface :as optional-range]
+   [com.zihao.re-frame-component.ui.popup.interface :as popup]
+   [com.zihao.re-frame-component.ui.table-filter.interface :as table-filter]
+   [com.zihao.re-frame-component.ui.tabs.interface :as tabs]
+   [com.zihao.re-frame-component.ui.tag.interface :as tag]))
 
 (def playbook-scene-id playbook-model/scene-id)
 (def playbook-normalize-scene playbook-model/normalize-scene)
@@ -46,12 +43,12 @@
 
 (def ime-safe-textarea ime-safe/textarea)
 
-(def filter-select-option-id filter-select-model/option-id)
-(def filter-select-option-label filter-select-model/option-label)
-(def filter-select-option-description filter-select-model/option-description)
-(def filter-select-filter-options filter-select-model/filter-options)
-(def filter-select-selected-option filter-select-model/selected-option)
-(def filter-select filter-select-view/filter-select)
+(def filter-select-option-id filter-select/option-id)
+(def filter-select-option-label filter-select/option-label)
+(def filter-select-option-description filter-select/option-description)
+(def filter-select-filter-options filter-select/filter-options)
+(def filter-select-selected-option filter-select/selected-option)
+(def filter-select filter-select/filter-select)
 
 (def multi-step-trigger-attrs multi-step/step-trigger-attrs)
 (def multi-step-trigger multi-step/step-trigger)
@@ -59,24 +56,24 @@
 (def multi-step-panel multi-step/step-panel)
 (def multi-step multi-step/multi-step)
 
-(def optional-range-state optional-range-model/range-state)
-(def optional-range-input-id optional-range-model/input-id)
-(def optional-range-filter optional-range-view/optional-range-filter)
+(def optional-range-state optional-range/range-state)
+(def optional-range-input-id optional-range/input-id)
+(def optional-range-filter optional-range/optional-range-filter)
 
-(def table-filter-default-type-definitions table-filter-model/default-type-definitions)
-(def table-filter-operators-for-field table-filter-model/operators-for-field)
-(def table-filter-repeatable-field? table-filter-model/repeatable-field?)
-(def table-filter-available-fields table-filter-model/available-fields)
-(def table-filter-draft-for-field table-filter-model/draft-for-field)
-(def table-filter-valid-condition? table-filter-model/valid-condition?)
-(def table-filter-with-operator table-filter-model/with-operator)
-(def table-filter-add-condition table-filter-model/add-condition)
-(def table-filter-replace-condition table-filter-model/replace-condition)
-(def table-filter-remove-condition table-filter-model/remove-condition)
-(def table-filter-clear-conditions table-filter-model/clear-conditions)
-(def table-filter-builder table-filter-view/table-filter-builder)
+(def table-filter-default-type-definitions table-filter/default-type-definitions)
+(def table-filter-operators-for-field table-filter/operators-for-field)
+(def table-filter-repeatable-field? table-filter/repeatable-field?)
+(def table-filter-available-fields table-filter/available-fields)
+(def table-filter-draft-for-field table-filter/draft-for-field)
+(def table-filter-valid-condition? table-filter/valid-condition?)
+(def table-filter-with-operator table-filter/with-operator)
+(def table-filter-add-condition table-filter/add-condition)
+(def table-filter-replace-condition table-filter/replace-condition)
+(def table-filter-remove-condition table-filter/remove-condition)
+(def table-filter-clear-conditions table-filter/clear-conditions)
+(def table-filter-builder table-filter/table-filter-builder)
 
-(def tag tag-view/tag)
+(def tag tag/tag)
 
 (def router-activation-route-key router-activation/route-key)
 (def router-activation-same-route? router-activation/same-route?)
