@@ -2,6 +2,15 @@
   (:require
    [com.zihao.re-frame-component.ui.ime-safe :as ime-safe]))
 
+(defn input-event-composing?
+  "True while a keyboard event belongs to an IME composition.
+
+  Use this only when the shortcut handler is attached to a container rather
+  than to the IME-safe field; `input` and `textarea` already gate their own
+  `:on-key-down`."
+  [dom-event]
+  (ime-safe/input-event-composing? dom-event))
+
 (defn input
   "Renders an IME-safe input.
 

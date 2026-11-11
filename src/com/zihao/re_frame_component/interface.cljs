@@ -43,6 +43,8 @@
 
 (def ime-safe-textarea ime-safe/textarea)
 
+(def input-event-composing? ime-safe/input-event-composing?)
+
 (def filter-select-option-id filter-select/option-id)
 (def filter-select-option-label filter-select/option-label)
 (def filter-select-option-description filter-select/option-description)
