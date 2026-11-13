@@ -149,7 +149,7 @@
             (select-option! local-state (:on-select opts) option))))
 
       "Escape"
-      (do
+      (when open?
         (.preventDefault event)
         (close! local-state))
 

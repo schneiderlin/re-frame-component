@@ -72,6 +72,24 @@ timing and backend predicates. The builder does not filter returned rows or
 dispatch resource effects. Cancellation restores focus; outside clicks
 deliberately keep the editor's draft open.
 
+## Popups and dialogs
+
+`popup-frame` renders the overlay and dialog panel; the host owns the content,
+the state behind it, and the event ids. A host that passes `:on-dismiss` — a
+dispatch vector, a sequence of dispatch vectors, or a handler — also gets Escape
+dismissal. `dialog` in an app facade passes its close action through as that
+dismissal, and `popup` treats `:on-cancel` as one.
+
+The listener is document-level, so the dialog still closes when focus sits
+outside it. The dismissal action runs through the frame captured at render time,
+because a DOM keydown callback is outside the frame scope where dispatch
+resolves its target.
+
+Escape is layered rather than global: only a keydown whose `defaultPrevented`
+is still false dismisses the popup. An inner popup that consumes Escape — an
+open searchable select, for example — calls `preventDefault` on the keydown it
+handles and leaves the enclosing dialog open, so one keystroke closes one layer.
+
 ## Routing and navigation
 
 Prefer native re-frame2 routing for new apps. The legacy custom hash router
