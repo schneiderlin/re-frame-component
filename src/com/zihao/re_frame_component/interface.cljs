@@ -11,6 +11,7 @@
    [com.zihao.re-frame-component.router.model :as router-model]
    [com.zihao.re-frame-component.router.sub :as router-sub]
    [com.zihao.re-frame-component.ui.filter-select.interface :as filter-select]
+   [com.zihao.re-frame-component.ui.anchor.interface :as anchor]
    [com.zihao.re-frame-component.ui.ime-safe.interface :as ime-safe]
    [com.zihao.re-frame-component.ui.multi-step.interface :as multi-step]
    [com.zihao.re-frame-component.ui.navbar.interface :as navbar]
@@ -318,6 +319,52 @@
    :footer-attrs footer-attrs
    :cancel-attrs cancel-attrs
    :confirm-attrs confirm-attrs])
+
+(defn anchor-position!
+  "Places a floating element beside an anchor and keeps it there.
+
+  This is an imperative DOM binding, not a component: call it from a `:ref` when
+  the element mounts and call the returned cleanup when the ref goes back to
+  `nil`. The element flips to the other side of the anchor when there is no
+  room and stays inside the viewport, and it receives `data-side`, `data-align`,
+  `--available-width`, `--available-height`, and `--transform-origin` so paint
+  can follow the resolved placement.
+
+  Parameters:
+  - `anchor-element` — the element to anchor against, or a function of no
+    arguments returning one, read on every check.
+  - `element` — the floating element.
+  - `options` — placement options, or a function of no arguments returning them:
+    - `:side` — `\"top\"`, `\"right\"`, `\"bottom\"`, `\"left\"`.
+    - `:align` — `\"start\"`, `\"center\"`, `\"end\"`.
+    - `:sideOffset` — gap from the anchor, in px.
+    - `:collisionPadding` — space kept from the viewport edges, in px.
+    - `:arrow`, `:arrowPadding` — optional arrow element and its inset.
+
+  Returns: a cleanup function."
+  [anchor-element element options]
+  (anchor/position! anchor-element element options))
+
+(defn anchor-bind-layer!
+  "Registers a floating element in the page's dismissal stack.
+
+  Escape and outside presses then walk the stack top-down and report the layer
+  they dismiss; the caller still owns whether it closes. This replaces the
+  per-element document listeners a floating UI would otherwise install.
+
+  Parameters:
+  - `element` — the floating element.
+  - `options` — layer options:
+    - `:onDismiss` — function of the reason string, called when the layer is
+      asked to close.
+    - `:contains` — function of a DOM node that counts extra nodes as inside.
+    - `:modal` — an outside press dismisses without reaching the page beneath.
+    - `:topLayer` — join the browser top layer where supported.
+    - `:closeOnBlur` — dismiss when the window loses focus.
+
+  Returns: a cleanup function."
+  [element options]
+  (anchor/bind-layer! element options))
 
 (defn ime-safe-input
   "Renders an input that survives IME composition.
