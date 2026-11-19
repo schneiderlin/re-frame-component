@@ -106,6 +106,37 @@ The wrapper owns `:ref`, `:on-change`, `:on-blur`, and composition start/end
 handlers. It does not currently guard Enter/Escape or form submission during
 composition; the host must handle those interaction semantics.
 
+## Switch
+
+```clojure
+(ns example.view
+  (:require [com.zihao.re-frame-component.interface :as component]))
+
+[component/switch
+ {:id "weekly-digest"
+  :checked? digest?
+  :on-change (fn [next] (save-digest! next))
+  :attrs {:class "settings-switch"}
+  :thumb-attrs {:class "settings-switch-thumb"}}]
+```
+
+A controlled boolean control for one setting. It owns the accessible behavior —
+`switch` role, Space and click activation, focus, form participation — and
+writes `data-checked` / `data-unchecked` (and `data-disabled`) on its two parts,
+so the caller paints both states from attributes instead of re-deriving them. It
+owns no styles, class names or copy. `:on-change` receives the next boolean;
+return `false` to keep the current value while a save runs, then re-render the
+value the save accepted. `switch-markup` exposes the same element tree without
+mounting it, for tests.
+
+The control's elements come from `@ui-sdk/web`, whose ES modules use syntax the
+npm/Closure pipeline cannot parse. They are bundled once into
+`resources/public/re-frame-component/ui-sdk/switch.js` by
+`npm run re-frame-component:ui-sdk-assets` (root `package.json`) and loaded with
+a module script the first time a switch renders, so a host only has to serve
+this component's `resources/public` at `/re-frame-component`. Re-run that script
+after changing the pinned `@ui-sdk/web` version and commit the asset.
+
 ## Other public primitives
 
 All exports retain the namespace `com.zihao.re-frame-component.interface`.

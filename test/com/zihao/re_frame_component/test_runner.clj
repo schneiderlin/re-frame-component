@@ -7,6 +7,7 @@
             [com.zihao.re-frame-component.ui.filter-select.model-test]
             [com.zihao.re-frame-component.ui.multi-step.model-test]
             [com.zihao.re-frame-component.ui.optional-range.model-test]
+            [com.zihao.re-frame-component.ui.switch.model-test]
             [com.zihao.re-frame-component.ui.table-filter.model-test]))
 
 (defn -main [& _]
@@ -19,6 +20,7 @@
          'com.zihao.re-frame-component.ui.filter-select.model-test
          'com.zihao.re-frame-component.ui.multi-step.model-test
          'com.zihao.re-frame-component.ui.optional-range.model-test
+         'com.zihao.re-frame-component.ui.switch.model-test
          'com.zihao.re-frame-component.ui.table-filter.model-test)]
     (shutdown-agents)
     (System/exit (if (zero? (+ fail error)) 0 1))))

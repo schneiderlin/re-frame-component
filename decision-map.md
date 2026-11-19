@@ -6,10 +6,12 @@ Canonical decisions:
   Affects: shared Catalog and Stage ownership, flat data-shaped Scenes,
   per-Scene frame isolation, Stage DOM containment, public Playbook APIs,
   stable routes, and the browser inspection bridge.
-- [Anchored Overlays Come From `@ui-sdk/core`](../../docs/decisions/ui-sdk-anchored-overlays.md)
+- [UI Behavior Comes From ui-sdk](../../docs/decisions/ui-sdk-behaviors.md)
   Affects: `ui/anchor` and its interface own positioning and the dismissal
-  stack; callers keep placement policy as a pure decision and keep their own
-  open state.
+  stack, and `ui/switch` and its interface own a controlled boolean's press,
+  focus and change behavior behind plain Clojure data; callers keep placement
+  policy, copy and styling, and `ui.switch.model` keeps the switch's element
+  contract pure.
 - [Web Design System](../../docs/decisions/design-system.md)
   Affects: interaction components remain visual-identity-neutral and own their
   accessibility and overlay mechanics; the Catalog hosts app-supplied fixed

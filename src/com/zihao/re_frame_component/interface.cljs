@@ -17,6 +17,7 @@
    [com.zihao.re-frame-component.ui.navbar.interface :as navbar]
    [com.zihao.re-frame-component.ui.optional-range.interface :as optional-range]
    [com.zihao.re-frame-component.ui.popup.interface :as popup]
+   [com.zihao.re-frame-component.ui.switch.interface :as switch]
    [com.zihao.re-frame-component.ui.table-filter.interface :as table-filter]
    [com.zihao.re-frame-component.ui.tabs.interface :as tabs]
    [com.zihao.re-frame-component.ui.tag.interface :as tag]))
@@ -408,6 +409,48 @@
   Returns: true when the event belongs to a composition, false otherwise."
   [dom-event]
   (ime-safe/input-event-composing? dom-event))
+
+(defn switch
+  "Renders one controlled switch for a single boolean setting.
+
+  Parameters:
+  - `props` — field attributes:
+    - `:id` — required element id; a caller's `<label for>` or description
+      `aria-describedby` points at it.
+    - `:checked?` — whether the switch is on.
+    - `:disabled?` — optional; blocks focus, presses and form submission.
+    - `:on-change` — optional function of the next boolean. Return `false` to keep
+      the current value while a save runs; the change is cancelled and the caller
+      re-renders the value it accepted.
+    - `:attrs` — optional map merged onto the track element (`:class`,
+      `:data-action`, `aria-*`).
+    - `:thumb-attrs` — optional map merged onto the thumb element.
+
+  Returns: Hiccup vector for the switch. The caller owns the styles, the label and
+  the copy; the mounted track carries `data-checked` / `data-unchecked` (and
+  `data-disabled` while disabled) for the caller's CSS."
+  [props]
+  [switch/switch props])
+
+(defn switch-markup
+  "Returns the element tree of one switch without mounting it.
+
+  Parameters:
+  - `props` — `{:id ... :attrs ... :thumb-attrs ...}`.
+
+  Returns: hiccup `[track attrs [thumb attrs]]` for the shared switch's own tags.
+
+  Pure, so the DOM contract the behavior expects is testable without a browser."
+  [props]
+  (switch/markup props))
+
+(def switch-track-tag
+  "Tag name of the switch track element (`\"ui-switch\"`)."
+  switch/track-tag)
+
+(def switch-thumb-tag
+  "Tag name of the switch thumb element (`\"ui-switch-thumb\"`)."
+  switch/thumb-tag)
 
 (defn filter-select-option-id
   "Returns an option's stable selection id.
