@@ -23,7 +23,8 @@
    `:align`, `:sideOffset`, `:collisionPadding`, `:onDismiss`, `:topLayer` —
    because a silently mistranslated key would be a silently ignored option."
   (:require
-   ["@ui-sdk/core" :as ui-sdk]))
+   ["@ui-sdk/core" :as ui-sdk]
+   [goog.object :as gobj]))
 
 (defn- js-options
   "Everything the SDK reads from options is either a plain value or a callback
@@ -50,12 +51,19 @@
     - `:collisionPadding` — space kept from the viewport edges, in px.
     - `:arrow`, `:arrowPadding` — optional arrow element and its inset.
 
-  Returns: a cleanup function. Call it when the element unmounts."
+  Returns: a handle map:
+  - `:stop` — call it when the element unmounts.
+  - `:place` — recompute now. Call it when the anchor element itself changed
+    under a mounted element; a getter keeps the position reads current, but
+    nothing wakes the position when the anchor is swapped."
   [anchor element options]
   (let [cleanup (ui-sdk/position anchor element (js-options options))]
-    (fn stop! []
-      (when (fn? cleanup)
-        (cleanup)))))
+    {:stop (fn stop! []
+             (when (fn? cleanup)
+               (cleanup)))
+     :place (fn place! []
+              (when-let [place (gobj/get cleanup "place")]
+                (.call place cleanup)))}))
 
 (defn bind-layer!
   "Registers `element` as a dismissal layer.
@@ -72,9 +80,9 @@
     - `:topLayer` — join the browser top layer when it is supported.
     - `:closeOnBlur` — dismiss when the window loses focus.
 
-  Returns: a cleanup function. Call it when the element unmounts."
+  Returns: a handle map with `:stop`, to call when the element unmounts."
   [element options]
   (let [cleanup (ui-sdk/bindLayer element (js-options options))]
-    (fn stop! []
-      (when (fn? cleanup)
-        (cleanup)))))
+    {:stop (fn stop! []
+             (when (fn? cleanup)
+               (cleanup)))}))

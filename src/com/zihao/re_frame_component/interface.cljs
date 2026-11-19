@@ -341,7 +341,9 @@
     - `:collisionPadding` — space kept from the viewport edges, in px.
     - `:arrow`, `:arrowPadding` — optional arrow element and its inset.
 
-  Returns: a cleanup function."
+  Returns: a handle map:
+  - `:stop` — call it when the element unmounts.
+  - `:place` — recompute now, after the anchor element itself changed."
   [anchor-element element options]
   (anchor/position! anchor-element element options))
 
@@ -362,7 +364,7 @@
     - `:topLayer` — join the browser top layer where supported.
     - `:closeOnBlur` — dismiss when the window loses focus.
 
-  Returns: a cleanup function."
+  Returns: a handle map with `:stop`, to call when the element unmounts."
   [element options]
   (anchor/bind-layer! element options))
 

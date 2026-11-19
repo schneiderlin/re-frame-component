@@ -28,7 +28,8 @@
     - `:arrow` — optional element inside the popup that points at the anchor.
     - `:arrowPadding` — space kept between the arrow and the corners, in px.
 
-  Returns: a cleanup function; call it when the element unmounts."
+  Returns: a handle map with `:stop`, to call when the element unmounts, and
+  `:place`, to recompute on demand after the anchor element itself changed."
   [anchor-element element options]
   (anchor/position! anchor-element element options))
 
@@ -49,6 +50,6 @@
     - `:topLayer` — join the browser top layer where it is supported.
     - `:closeOnBlur` — dismiss when the window loses focus.
 
-  Returns: a cleanup function; call it when the element unmounts."
+  Returns: a handle map with `:stop`, to call when the element unmounts."
   [element options]
   (anchor/bind-layer! element options))
