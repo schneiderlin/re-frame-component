@@ -17,6 +17,7 @@
    [com.zihao.re-frame-component.ui.navbar.interface :as navbar]
    [com.zihao.re-frame-component.ui.optional-range.interface :as optional-range]
    [com.zihao.re-frame-component.ui.popup.interface :as popup]
+   [com.zihao.re-frame-component.ui.sdk-picker :as sdk-picker]
    [com.zihao.re-frame-component.ui.switch.interface :as switch]
    [com.zihao.re-frame-component.ui.table-filter.interface :as table-filter]
    [com.zihao.re-frame-component.ui.token-input.interface :as token-input]
@@ -452,6 +453,47 @@
 (def switch-thumb-tag
   "Tag name of the switch thumb element (`\"ui-switch-thumb\"`)."
   switch/thumb-tag)
+
+(defn command
+  "Renders a headless ui-sdk Command with an initially empty native input.
+
+  `:items` contains maps with a unique string `:value`, string `:label`, optional
+  string vector `:keywords`, and optional string `:description`. The description
+  is rendered separately (`[data-command-description]`) for styling as a second
+  line; the label uses `[data-command-label]`.
+
+  Results appear only for a non-blank query. Activation clears the query before
+  invoking `:on-select` with the item's value. `:empty-label` defaults to
+  \"No results\". `:input-attrs` styles and names the native input (supply an
+  accessible name); `:attrs` extends `ui-command`. `:part-attrs` styles the
+  `:content`, `:list`, `:item`, `:description` and `:empty` parts."
+  [props]
+  [sdk-picker/command props])
+
+(defn combobox
+  "Renders a controlled, headless ui-sdk single-select Combobox.
+
+  `:items` contains maps with a unique string `:value`, string `:label`, and
+  optional string vector `:keywords`. `:value` is a selected item value or nil;
+  unknown values are displayed as no selection. `:disabled?` disables the field.
+  `:on-select` receives the new item value on explicit selection. To accept it,
+  pass it back as `:value`; typing, dismissal, and prop writes never notify.
+
+  `:empty-label` defaults to \"No options\". `:input-attrs` styles and names the
+  native input (supply an accessible name); `:attrs` extends `ui-combobox`.
+  `:part-attrs` styles `:content`, `:list` and `:empty`; `:item` takes `:class`. The
+  adapter owns widget state and does not accept free-form text."
+  [props]
+  [sdk-picker/combobox props])
+
+(defn select
+  "Controlled ui-sdk single Select for fixed choices. `:items` contains string
+  `:value` and `:label` pairs, optionally `:disabled?`. `:on-select` receives a
+  user selection; pass it back as `:value` to accept. Supply the button's
+  accessible name in `:trigger-attrs`, optional `:icon` Hiccup, and style the
+  popup via `:part-attrs` (`:content`, `:list`, `:item`)."
+  [props]
+  [sdk-picker/select props])
 
 (defn token-input
   "Renders one controlled token input: an editor that holds tokens beside text.
