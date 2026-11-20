@@ -159,6 +159,20 @@
     (when-let [handler @handler*]
       (handler (read-value node) (change-detail dom-event)))))
 
+(defn- set-composing!
+  "Marks the window in which an input method is composing.
+
+   The element deliberately keeps a composition out of its own value until the
+   reader picks a candidate, so every value-derived attribute (the editor's
+   `data-empty` among them) is behind the DOM for those few hundred milliseconds.
+   Paint that has to follow what is on screen — a placeholder under the composing
+   text, for one — needs this window, and only the caller can see it."
+  [{:keys [node* composing?*]} composing?]
+  (when-not (= composing? @composing?*)
+    (reset! composing?* composing?)
+    (when-let [^js node @node*]
+      (.toggleAttribute node "data-composing" composing?))))
+
 (defn- runtime
   "The per-instance runtime of one mounted token input.
 
@@ -175,13 +189,19 @@
                   :paste-handler* (atom nil)
                   :sources* (atom nil)
                   :triggers* (atom ::unset)
+                  :composing?* (atom false)
                   :listening?* (atom false)}
             runtime (assoc base
                            :on-valuechange (fn [dom-event] (report-change base dom-event))
                            :on-paste (fn [^js dom-event]
                                        (when-let [handler @(:paste-handler* base)]
                                          (handler dom-event)))
+                           :on-compositionstart (fn [_dom-event]
+                                                  (set-composing! base true))
+                           :on-compositionend (fn [_dom-event]
+                                                (set-composing! base false))
                            :on-focusout (fn [^js dom-event]
+                                          (set-composing! base false)
                                           (when-let [handler @(:blur-handler* base)]
                                             (handler dom-event))))]
         (aset this "tokenInputRuntime" runtime)
@@ -195,7 +215,8 @@
    setting `value` is an undoable step that moves the caret to the end, so a model
    copy that is one turn behind must not be able to drag the text backwards."
   [{:keys [node* handler* seed-key* sources* triggers* listening?* blur-handler*
-           paste-handler* on-valuechange on-paste on-focusout]}
+           paste-handler* on-valuechange on-paste on-compositionstart
+           on-compositionend on-focusout]}
    props]
   (reset! handler* (:on-change props))
   (reset! blur-handler* (:on-blur props))
@@ -216,6 +237,8 @@
       ;; commit boundary a caller can hang a snapshot on.
       (.addEventListener node "valuechange" on-valuechange)
       (.addEventListener node "paste" on-paste)
+      (.addEventListener node "compositionstart" on-compositionstart)
+      (.addEventListener node "compositionend" on-compositionend)
       (.addEventListener node "focusout" on-focusout)
       (reset! listening?* true))))
 
@@ -242,10 +265,13 @@
         (sync! (runtime this) props)))
     :component-will-unmount
     (fn [this]
-      (let [{:keys [node* listening?* on-valuechange on-paste on-focusout]} (runtime this)]
+      (let [{:keys [node* listening?* on-valuechange on-paste on-compositionstart
+                    on-compositionend on-focusout]} (runtime this)]
         (when-let [^js node @node*]
           (.removeEventListener node "valuechange" on-valuechange)
           (.removeEventListener node "paste" on-paste)
+          (.removeEventListener node "compositionstart" on-compositionstart)
+          (.removeEventListener node "compositionend" on-compositionend)
           (.removeEventListener node "focusout" on-focusout))
         (reset! listening?* false)))
     :reagent-render render-token-input}))
