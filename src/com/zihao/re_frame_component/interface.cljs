@@ -19,6 +19,7 @@
    [com.zihao.re-frame-component.ui.popup.interface :as popup]
    [com.zihao.re-frame-component.ui.switch.interface :as switch]
    [com.zihao.re-frame-component.ui.table-filter.interface :as table-filter]
+   [com.zihao.re-frame-component.ui.token-input.interface :as token-input]
    [com.zihao.re-frame-component.ui.tabs.interface :as tabs]
    [com.zihao.re-frame-component.ui.tag.interface :as tag]))
 
@@ -451,6 +452,71 @@
 (def switch-thumb-tag
   "Tag name of the switch thumb element (`\"ui-switch-thumb\"`)."
   switch/thumb-tag)
+
+(defn token-input
+  "Renders one controlled token input: an editor that holds tokens beside text.
+
+  Parameters:
+  - `props` — input attributes:
+    - `:value` — required; a vector of strings and token maps
+      `{:type :value :label}` (`:id`, `:status`, `:data` are the element's own).
+    - `:on-change` — optional function of `(value details)`; `details` carries
+      `:reason`, `:input-type` and the `:removed` tokens a change dropped.
+    - `:triggers` — optional vector of declarative triggers (`:char`, `:type`,
+      `:source`, plus the element's options in kebab case like `:boundary`).
+    - `:sources` — optional map of source key → `(fn [query context] ...)` returning
+      items or a Promise of them. A trigger is mounted only when its source exists.
+    - `:submit-shortcut` — `\"enter\"` or `\"mod+enter\"`; the element submits the form
+      it is in, so the caller owns the `<form>`.
+    - `:disabled?`, `:read-only?`, `:id`, and the paint maps described on
+      `token-input-markup`.
+
+  Returns: Hiccup vector for the token input, or nil while its elements load. The
+  caller owns every class, label and placeholder; the element owns the edits."
+  [props]
+  [token-input/token-input props])
+
+(defn token-input-markup
+  "Returns the element tree of one token input without mounting it.
+
+  Parameters:
+  - `props` — the same maps `token-input` takes; `:value` and `:triggers` are never
+    rendered, because the binding writes them onto the DOM node.
+
+  Returns: hiccup `[ui-token-input ...]` with the editor, the token `<template>`,
+  and the suggestion menu only when a trigger has a source."
+  [props]
+  (token-input/markup props))
+
+(defn token-input-trigger-menu?
+  "Whether the given token input props mount a suggestion menu.
+
+  Parameters:
+  - `props` — the maps `token-input` takes.
+
+  Returns: true when at least one declared trigger has a source."
+  [props]
+  (token-input/trigger-menu? props))
+
+(def token-input-tag
+  "Tag name of the token input element (`\"ui-token-input\"`)."
+  token-input/input-tag)
+
+(def token-input-editor-tag
+  "Tag name of the editor inside a token input (`\"ui-token-input-editor\"`)."
+  token-input/editor-tag)
+
+(def token-input-token-tag
+  "Tag name of one token (`\"ui-token-input-token\"`)."
+  token-input/token-tag)
+
+(def token-input-token-remove-tag
+  "Tag name of a token's remove part (`\"ui-token-input-token-remove\"`)."
+  token-input/token-remove-tag)
+
+(def token-input-trigger-menu-tag
+  "Tag name of the token input's suggestion menu (`\"ui-trigger-menu\"`)."
+  token-input/trigger-menu-tag)
 
 (defn filter-select-option-id
   "Returns an option's stable selection id.
