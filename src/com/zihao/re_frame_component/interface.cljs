@@ -474,8 +474,9 @@
   "Renders a controlled, headless ui-sdk single-select Combobox.
 
   `:items` contains maps with a unique string `:value`, string `:label`, and
-  optional string vector `:keywords`. `:value` is a selected item value or nil;
-  unknown values are displayed as no selection. `:disabled?` disables the field.
+  optional string vector `:keywords` and boolean `:disabled`. `:value` is a
+  selected item value or nil; unknown values are displayed as no selection.
+  `:disabled?` disables the field. `:default-open?` opens it once on mount.
   `:on-select` receives the new item value on explicit selection. To accept it,
   pass it back as `:value`; typing, dismissal, and prop writes never notify.
 

@@ -137,18 +137,32 @@
                     :bind! (partial bind-command! querying?))]
     (fn [props] [picker-element spec props])))
 
-(defn- combobox-markup [{:keys [attrs input-attrs empty-label part-attrs]}]
+(defn- combobox-markup [{:keys [attrs input-attrs empty-label part-attrs items icon]}]
   [:ui-combobox (-> attrs
                     (dissoc :value :default-value :query :default-query :items
                             :open :default-open :disabled :read-only :container)
                     (assoc :multiple "false" :allow-custom-value "false"
                            :auto-highlight "true" :presentation "popover"))
-   [:ui-combobox-input (input-markup input-attrs)]
+   (if icon
+     [:div (:control part-attrs)
+      [:ui-combobox-input (input-markup input-attrs)]
+      [:ui-combobox-trigger
+       [:button (assoc (:trigger part-attrs) :type "button") icon]]]
+     [:ui-combobox-input (input-markup input-attrs)])
    [:ui-combobox-content (assoc (:content part-attrs) :keep-mounted "" :hidden true)
-    ;; The SDK owns the children of this list. Reagent only owns its shell.
-    [:ui-combobox-list (:list part-attrs)]
+    (into [:ui-combobox-list (:list part-attrs)]
+          (when-let [description-attrs (:description part-attrs)]
+            (map (fn [{:keys [value label description disabled keywords]}]
+                   ^{:key value}
+                   [:ui-combobox-item (cond-> (assoc (:item part-attrs) :value value :label label
+                                                    :keywords (str/join "," keywords))
+                                       disabled (assoc :disabled ""))
+                    label
+                    (when (seq description)
+                      [:span (assoc description-attrs :title description) description])])
+                 items)))
     [:ui-combobox-empty [:span (:empty part-attrs) (or empty-label "No options")]]]
-   (when-let [item-class (get-in part-attrs [:item :class])]
+   (when-let [item-class (when-not (:description part-attrs) (get-in part-attrs [:item :class]))]
      [:template
       {:ref (fn [^js template]
               (when template
@@ -161,13 +175,13 @@
 (defn- bind-combobox! [^js node _]
   (let [props* (volatile! nil)
         items* (volatile! nil)
-        label* (volatile! nil)
         unvalue! (listen! node "valuechange"
                           (fn [^js event]
                             (let [^js detail (.-detail event)
                                   reason (.-reason detail)
                                   value (.-value detail)
-                                  {:keys [on-select disabled?]} @props*]
+                                  {:keys [on-select disabled?]} @props*
+                                  item (get @items* value)]
                               ;; beta.10 requests a null value when typing deletes
                               ;; all the text. Cancel that (and other non-picker edits).
                               ;; Also cancel the SDK's own commit for a real pick:
@@ -175,32 +189,34 @@
                               (when-not (= "imperative" reason)
                                 (.preventDefault event)
                                 (when (and (= "item-press" reason) (not disabled?)
-                                           on-select (contains? @items* value))
+                                           on-select item (not (:disabled item)))
                                   (on-select value))))) false)
         unquery! (listen! node "querychange"
                           (fn [^js event]
                             ;; A form reset shouldn't overwrite the controlled label.
                             (when (= "reset" (.. event -detail -reason))
                               (.preventDefault event))) false)]
-    {:sync! (fn [{:keys [items value disabled?] :as props}]
-              (when (or (nil? @items*) (not= items (:items @props*)))
-                (vreset! items* (into {} (map (juxt :value :label)) items))
-                (set! (.-items node) (clj->js (mapv #(select-keys % [:value :label :keywords]) items))))
-              (vreset! props* props)
-              (let [value (when (contains? @items* value) value)
-                    label (get @items* value "")]
-                (when (and disabled? (.-open node))
-                  (set! (.-open node) false))
-                (try
-                  (when (not= value (.-value node))
-                    ;; beta.10 also blocks imperative setValue when disabled.
-                    (.removeAttribute node "disabled")
-                    (set! (.-value node) value)
-                    (set! (.-query node) label))
-                  (when (and (not= label @label*) (not= label (.-query node)))
-                    (set! (.-query node) label))
-                  (vreset! label* label)
-                  (finally (.toggleAttribute node "disabled" (boolean disabled?))))))
+    {:sync! (fn [{:keys [items value disabled? default-open? part-attrs] :as props}]
+              (let [initial? (nil? @props*)]
+                (when (or initial? (not= items (:items @props*)))
+                  (vreset! items* (into {} (map (juxt :value identity)) items))
+                  ;; Composed rows register themselves and are filtered by the SDK.
+                  (when-not (:description part-attrs)
+                    (set! (.-items node) (clj->js (mapv #(select-keys % [:value :label :keywords :disabled]) items)))))
+                (vreset! props* props)
+                (let [value (when (contains? @items* value) value)]
+                  (when (and disabled? (.-open node))
+                    (set! (.-open node) false))
+                  (try
+                    (when (not= value (.-value node))
+                      ;; beta.10 also blocks imperative setValue when disabled.
+                      (.removeAttribute node "disabled")
+                      ;; Let the SDK display the selected label. A query write
+                      ;; marks it as a search and hides the other options.
+                      (set! (.-value node) value))
+                    (finally (.toggleAttribute node "disabled" (boolean disabled?)))))
+                (when (and initial? default-open? (not disabled?))
+                  (set! (.-open node) true))))
      :cleanup! #(do (unvalue!) (unquery!))}))
 
 (def ^:private combobox-spec
