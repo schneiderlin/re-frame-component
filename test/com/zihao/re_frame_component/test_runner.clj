@@ -7,6 +7,7 @@
             [com.zihao.re-frame-component.ui.filter-select.model-test]
             [com.zihao.re-frame-component.ui.multi-step.model-test]
             [com.zihao.re-frame-component.ui.optional-range.model-test]
+            [com.zihao.re-frame-component.ui.segmented-control.model-test]
             [com.zihao.re-frame-component.ui.switch.model-test]
             [com.zihao.re-frame-component.ui.table-filter.model-test]
             [com.zihao.re-frame-component.ui.token-input.model-test]))
@@ -21,6 +22,7 @@
          'com.zihao.re-frame-component.ui.filter-select.model-test
          'com.zihao.re-frame-component.ui.multi-step.model-test
          'com.zihao.re-frame-component.ui.optional-range.model-test
+         'com.zihao.re-frame-component.ui.segmented-control.model-test
          'com.zihao.re-frame-component.ui.switch.model-test
          'com.zihao.re-frame-component.ui.table-filter.model-test
          'com.zihao.re-frame-component.ui.token-input.model-test)]

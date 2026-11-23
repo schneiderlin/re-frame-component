@@ -18,6 +18,7 @@
    [com.zihao.re-frame-component.ui.optional-range.interface :as optional-range]
    [com.zihao.re-frame-component.ui.popup.interface :as popup]
    [com.zihao.re-frame-component.ui.sdk-picker :as sdk-picker]
+   [com.zihao.re-frame-component.ui.segmented-control.interface :as segmented-control]
    [com.zihao.re-frame-component.ui.switch.interface :as switch]
    [com.zihao.re-frame-component.ui.table-filter.interface :as table-filter]
    [com.zihao.re-frame-component.ui.thread-ref.interface :as thread-ref]
@@ -454,6 +455,48 @@
 (def switch-thumb-tag
   "Tag name of the switch thumb element (`\"ui-switch-thumb\"`)."
   switch/thumb-tag)
+
+(defn segmented-control
+  "Renders one controlled choice on a short scale.
+
+  Parameters:
+  - `props` — the control:
+    - `:id` — required element id; a caller's legend or label names the group.
+    - `:value` — the chosen item's `:value`, or nil when nothing is chosen.
+    - `:items` — required sequence of `{:value ... :label ... :attrs ...}`.
+    - `:on-change` — optional function of the chosen value. Return `false` to
+      keep the current value while a save runs.
+    - `:parse-value` — optional function mapping the element's string value back
+      to the caller's value type; defaults to `identity`.
+    - `:disabled?` / `:read-only?` — optional group state.
+    - `:attrs` / `:item-attrs` / `:indicator?` / `:indicator-attrs` — painting
+      and semantics.
+
+  Returns: Hiccup vector for the control. The caller owns the styles, the label
+  and the copy; the mounted items carry `data-checked` / `data-unchecked` (and
+  `data-disabled` while disabled) for the caller's CSS."
+  [props]
+  (segmented-control/segmented-control props))
+
+(defn segmented-control-markup
+  "Returns the element tree of one segmented control without mounting it.
+
+  Parameters:
+  - `props` — `{:id ... :items [...] :attrs ... :item-attrs ...}`.
+
+  Returns: hiccup `[root attrs indicator? item...]` for the shared element tags.
+
+  Pure, so the DOM contract the behavior expects is testable without a browser."
+  [props]
+  (segmented-control/markup props))
+
+(def segmented-control-root-tag
+  "Tag name of the segmented control group (`\"ui-segmented-control\"`)."
+  segmented-control/root-tag)
+
+(def segmented-control-item-tag
+  "Tag name of one segmented control choice (`\"ui-segmented-control-item\"`)."
+  segmented-control/item-tag)
 
 (defn command
   "Renders a headless ui-sdk Command with an initially empty native input.
@@ -1020,9 +1063,13 @@
   (table-filter/table-filter-builder builder-options))
 
 (defn thread-ref
+  "Renders one Thread named where a reader can act on it. See
   `com.zihao.re-frame-component.ui.thread-ref.interface/thread-ref` for the
+  reference's arguments; the root carries `data-component`
   `\"re-frame-thread-ref\"` and `data-thread`."
+  [props]
   (thread-ref/thread-ref props))
+
 (defn tag
   "Renders an unstyled semantic tag.
 

@@ -137,6 +137,39 @@ a module script the first time a switch renders, so a host only has to serve
 this component's `resources/public` at `/re-frame-component`. Re-run that script
 after changing the pinned `@ui-sdk/web` version and commit the asset.
 
+## Segmented control
+
+```clojure
+(ns example.view
+  (:require [com.zihao.re-frame-component.interface :as component]))
+
+[component/segmented-control
+ {:id "confidence"
+  :value confidence                     ; 60, or nil when nothing is chosen
+  :parse-value #(js/parseInt % 10)      ; item values arrive as strings
+  :on-change (fn [next] (pick! next))
+  :items [{:value 25 :label "不太确定"}
+          {:value 60 :label "有些把握"}
+          {:value 90 :label "很有把握"}]
+  :attrs {:class "confidence-scale"}
+  :item-attrs {:class "confidence-segment"}}]
+```
+
+One answer on a short scale, as a `radiogroup`: roving focus, Arrow/Home/End
+navigation, press activation, form participation and the `data-checked` /
+`data-unchecked` / `data-disabled` hooks on each item all come from ui-sdk's
+`ui-segmented-control` / `ui-segmented-control-item` elements. The caller paints
+both states from those attributes and owns the labels; this namespace owns no
+styles, copy or state. `:on-change` receives the chosen item's value mapped back
+through `:parse-value`; return `false` to keep the current value while a save
+runs. `segmented-control-markup` exposes the same element tree without mounting
+it, for tests.
+
+The elements are bundled like the switch's, by
+`npm run re-frame-component:ui-sdk-assets`, into
+`resources/public/re-frame-component/ui-sdk/segmented-control.js`. Re-run that
+script after changing the pinned `@ui-sdk/web` version and commit the asset.
+
 ## Other public primitives
 
 All exports retain the namespace `com.zihao.re-frame-component.interface`.
