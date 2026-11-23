@@ -137,6 +137,92 @@ a module script the first time a switch renders, so a host only has to serve
 this component's `resources/public` at `/re-frame-component`. Re-run that script
 after changing the pinned `@ui-sdk/web` version and commit the asset.
 
+## Segmented control
+
+```clojure
+(ns example.view
+  (:require [com.zihao.re-frame-component.interface :as component]))
+
+[component/segmented-control
+ {:id "confidence"
+  :value confidence                     ; 60, or nil when nothing is chosen
+  :parse-value #(js/parseInt % 10)      ; item values arrive as strings
+  :on-change (fn [next] (pick! next))
+  :items [{:value 25 :label "不太确定"}
+          {:value 60 :label "有些把握"}
+          {:value 90 :label "很有把握"}]
+  :attrs {:class "confidence-scale"}
+  :item-attrs {:class "confidence-segment"}}]
+```
+
+One answer on a short scale, as a `radiogroup`: roving focus, Arrow/Home/End
+navigation, press activation, form participation and the `data-checked` /
+`data-unchecked` / `data-disabled` hooks on each item all come from ui-sdk's
+`ui-segmented-control` / `ui-segmented-control-item` elements. The caller paints
+both states from those attributes and owns the labels; this namespace owns no
+styles, copy or state. `:on-change` receives the chosen item's value mapped back
+through `:parse-value`; return `false` to keep the current value while a save
+runs. `segmented-control-markup` exposes the same element tree without mounting
+it, for tests.
+
+The elements are bundled like the switch's, by
+`npm run re-frame-component:ui-sdk-assets`, into
+`resources/public/re-frame-component/ui-sdk/segmented-control.js`. Re-run that
+script after changing the pinned `@ui-sdk/web` version and commit the asset.
+
+## Tree
+
+```clojure
+(ns example.view
+  (:require [com.zihao.re-frame-component.interface :as component]))
+
+[component/tree
+ {:mode :single
+  :value selected-id                    ; the row the caller considers chosen
+  :current selected-id                  ; the row the page shows; its ancestors open
+  :expanded #{parent-id}                ; the caller owns which branches are open
+  :expand-on-press? false               ; a press opens the row; the arrow folds it
+  :on-value-change (fn [id] (open! id))
+  :on-expanded-change (fn [ids] (remember-open! ids))
+  :attrs {:class "file-tree"}
+  :children (mapv (fn [row]
+                    (component/tree-item
+                     {:value (:id row)
+                      :branch? (seq (:children row))
+                      :label (:title row)
+                      :attrs {:class "file-tree-row"}
+                      :children (cond-> [(component/tree-label
+                                          {:class "file-tree-label"}
+                                          [(:title row)])]
+                                  (seq (:children row))
+                                  (conj (component/tree-indicator
+                                         {:class "file-tree-toggle"}
+                                         [chevron])
+                                        (component/tree-group
+                                         {:class "file-tree-children"}
+                                         (child-rows row))))}))
+                  rows)}]
+```
+
+A nested list a person opens, closes and selects from. ui-sdk's `ui-tree`
+elements supply the `tree`/`treeitem` roles, the roving tab stop,
+Arrow/Home/End and typeahead navigation, Enter/Space selection, per-branch
+expansion, `current` opening its ancestors, and the `data-expanded` /
+`data-selected` / `data-level` / `data-current` hooks each row paints from. A
+row's label is a slot for the caller's own content, never a string the component
+prints.
+
+Selection and expansion are the caller's: `:value` and `:expanded` are written as
+live properties on every render, and `:on-value-change` / `:on-expanded-change`
+report only what a person changed. A control a row hosts (a row menu, a button)
+carries `data-row-action`, so pressing it does not also select the row.
+`tree-markup` exposes the element tree without mounting it, for tests.
+
+The elements are bundled like the switch's, by
+`npm run re-frame-component:ui-sdk-assets`, into
+`resources/public/re-frame-component/ui-sdk/tree.js`. Re-run that script after
+changing the pinned `@ui-sdk/web` version and commit the asset.
+
 ## Other public primitives
 
 All exports retain the namespace `com.zihao.re-frame-component.interface`.
