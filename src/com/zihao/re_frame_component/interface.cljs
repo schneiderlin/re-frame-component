@@ -20,6 +20,7 @@
    [com.zihao.re-frame-component.ui.sdk-picker :as sdk-picker]
    [com.zihao.re-frame-component.ui.switch.interface :as switch]
    [com.zihao.re-frame-component.ui.table-filter.interface :as table-filter]
+   [com.zihao.re-frame-component.ui.thread-ref.interface :as thread-ref]
    [com.zihao.re-frame-component.ui.token-input.interface :as token-input]
    [com.zihao.re-frame-component.ui.tabs.interface :as tabs]
    [com.zihao.re-frame-component.ui.tag.interface :as tag]))
@@ -1018,6 +1019,10 @@
   [builder-options]
   (table-filter/table-filter-builder builder-options))
 
+(defn thread-ref
+  `com.zihao.re-frame-component.ui.thread-ref.interface/thread-ref` for the
+  `\"re-frame-thread-ref\"` and `data-thread`."
+  (thread-ref/thread-ref props))
 (defn tag
   "Renders an unstyled semantic tag.
 
