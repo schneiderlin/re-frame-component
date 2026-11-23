@@ -10,7 +10,8 @@
             [com.zihao.re-frame-component.ui.segmented-control.model-test]
             [com.zihao.re-frame-component.ui.switch.model-test]
             [com.zihao.re-frame-component.ui.table-filter.model-test]
-            [com.zihao.re-frame-component.ui.token-input.model-test]))
+            [com.zihao.re-frame-component.ui.token-input.model-test]
+            [com.zihao.re-frame-component.ui.tree.model-test]))
 
 (defn -main [& _]
   (let [{:keys [fail error]}
@@ -25,6 +26,7 @@
          'com.zihao.re-frame-component.ui.segmented-control.model-test
          'com.zihao.re-frame-component.ui.switch.model-test
          'com.zihao.re-frame-component.ui.table-filter.model-test
-         'com.zihao.re-frame-component.ui.token-input.model-test)]
+         'com.zihao.re-frame-component.ui.token-input.model-test
+         'com.zihao.re-frame-component.ui.tree.model-test)]
     (shutdown-agents)
     (System/exit (if (zero? (+ fail error)) 0 1))))

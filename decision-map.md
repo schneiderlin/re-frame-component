@@ -9,9 +9,12 @@ Canonical decisions:
 - [UI Behavior Comes From ui-sdk](../../docs/decisions/ui-sdk-behaviors.md)
   Affects: `ui/anchor` and its interface own positioning and the dismissal
   stack, `ui/switch` and its interface own a controlled boolean's press, focus
-  and change behavior, and `ui/token-input` owns an element-held token value, an
+  and change behavior, `ui/token-input` owns an element-held token value, an
   edit's reason and the suggestion menu — seeded by `:value-key` and read through
-  a handle, never mirrored — all behind plain Clojure data; callers keep placement
+  a handle, never mirrored — `ui/segmented-control` owns one answer on a short
+  scale, and `ui/tree` owns a nested list's roving focus, expansion and
+  selection, with `data-row-action` marking a control hosted inside a row so its
+  presses stay its own. All behind plain Clojure data; callers keep placement
   policy, copy, styling and whatever snapshot of the text they want. The `.model`
   namespaces keep each element contract pure. Each binding is the same shape: one
   bundled module under `resources/public/re-frame-component/ui-sdk/`, a DOM write

@@ -170,6 +170,59 @@ The elements are bundled like the switch's, by
 `resources/public/re-frame-component/ui-sdk/segmented-control.js`. Re-run that
 script after changing the pinned `@ui-sdk/web` version and commit the asset.
 
+## Tree
+
+```clojure
+(ns example.view
+  (:require [com.zihao.re-frame-component.interface :as component]))
+
+[component/tree
+ {:mode :single
+  :value selected-id                    ; the row the caller considers chosen
+  :current selected-id                  ; the row the page shows; its ancestors open
+  :expanded #{parent-id}                ; the caller owns which branches are open
+  :expand-on-press? false               ; a press opens the row; the arrow folds it
+  :on-value-change (fn [id] (open! id))
+  :on-expanded-change (fn [ids] (remember-open! ids))
+  :attrs {:class "file-tree"}
+  :children (mapv (fn [row]
+                    (component/tree-item
+                     {:value (:id row)
+                      :branch? (seq (:children row))
+                      :label (:title row)
+                      :attrs {:class "file-tree-row"}
+                      :children (cond-> [(component/tree-label
+                                          {:class "file-tree-label"}
+                                          [(:title row)])]
+                                  (seq (:children row))
+                                  (conj (component/tree-indicator
+                                         {:class "file-tree-toggle"}
+                                         [chevron])
+                                        (component/tree-group
+                                         {:class "file-tree-children"}
+                                         (child-rows row))))}))
+                  rows)}]
+```
+
+A nested list a person opens, closes and selects from. ui-sdk's `ui-tree`
+elements supply the `tree`/`treeitem` roles, the roving tab stop,
+Arrow/Home/End and typeahead navigation, Enter/Space selection, per-branch
+expansion, `current` opening its ancestors, and the `data-expanded` /
+`data-selected` / `data-level` / `data-current` hooks each row paints from. A
+row's label is a slot for the caller's own content, never a string the component
+prints.
+
+Selection and expansion are the caller's: `:value` and `:expanded` are written as
+live properties on every render, and `:on-value-change` / `:on-expanded-change`
+report only what a person changed. A control a row hosts (a row menu, a button)
+carries `data-row-action`, so pressing it does not also select the row.
+`tree-markup` exposes the element tree without mounting it, for tests.
+
+The elements are bundled like the switch's, by
+`npm run re-frame-component:ui-sdk-assets`, into
+`resources/public/re-frame-component/ui-sdk/tree.js`. Re-run that script after
+changing the pinned `@ui-sdk/web` version and commit the asset.
+
 ## Other public primitives
 
 All exports retain the namespace `com.zihao.re-frame-component.interface`.
