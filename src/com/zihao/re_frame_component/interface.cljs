@@ -10,6 +10,7 @@
    [com.zihao.re-frame-component.router.event :as router-event]
    [com.zihao.re-frame-component.router.model :as router-model]
    [com.zihao.re-frame-component.router.sub :as router-sub]
+   [com.zihao.re-frame-component.ui.disclosure.interface :as disclosure]
    [com.zihao.re-frame-component.ui.filter-select.interface :as filter-select]
    [com.zihao.re-frame-component.ui.anchor.interface :as anchor]
    [com.zihao.re-frame-component.ui.ime-safe.interface :as ime-safe]
@@ -592,6 +593,74 @@
 (def tree-group-tag
   "Tag name of a branch row's children container (`\"ui-tree-group\"`)."
   tree/group-tag)
+
+(defn disclosure
+  "Renders one disclosure: a trigger a person presses and the panel it shows.
+
+  Parameters:
+  - `props` — the disclosure:
+    - `:open?` — the open state, when the caller owns it; omit it to let the
+      element own the state, and re-render the value you accept.
+    - `:default-open?` — the state a panel opens with when the element owns it.
+    - `:on-open-change` — optional function of the next boolean; return `false`
+      to keep the current state while a save runs.
+    - `:on-ref` — optional function of the root element, called on mount and on
+      every update.
+    - `:disabled?` — optional; a press on the trigger then changes nothing.
+    - `:keep-mounted?` — whether a closed panel stays in the page, hidden;
+      defaults to `true`, so a panel keeps what is inside it.
+    - `:hidden-until-found?` — keeps a closed panel findable by find in page.
+    - `:attrs` / `:trigger-attrs` / `:button-attrs` / `:panel-attrs` — painting
+      and test hooks on each part. Do not set `aria-expanded`, `aria-controls`
+      or `id` on the button; the element owns them.
+    - `:trigger-children` — the button's content: the caller's label plus
+      usually `(disclosure-chevron {:class ...})`.
+    - `:panel-children` — the panel's content.
+
+  Returns: Hiccup vector for the disclosure. The caller owns the styles, the
+  labels and the copy; the mounted parts carry `data-open` / `data-closed` (and
+  `data-disabled`) for the caller's CSS."
+  [props]
+  [disclosure/disclosure props])
+
+(defn disclosure-chevron
+  "The shared disclosure chevron, for a trigger's content.
+
+  Parameters:
+  - `attrs` — optional map merged onto the `<svg>`; pass the caller's class,
+    whose paint rotates the glyph from the trigger's `data-open`.
+
+  Returns: hiccup `<svg>` for one stroke chevron pointing right."
+  ([]
+   (disclosure/chevron))
+  ([attrs]
+   (disclosure/chevron attrs)))
+
+(defn disclosure-markup
+  "Returns the element tree of one disclosure without mounting it.
+
+  Parameters:
+  - `props` — see `disclosure`.
+
+  Returns: hiccup `[root attrs [trigger attrs [button attrs ...content]]
+  [panel attrs ...content]]` for the shared element tags.
+
+  Pure, so the DOM contract the behavior expects is testable without a browser."
+  [props]
+  (disclosure/markup props))
+
+(def disclosure-root-tag
+  "Tag name of the disclosure root (`\"ui-collapsible\"`)."
+  disclosure/root-tag)
+
+(def disclosure-trigger-tag
+  "Tag name of the part wrapping the caller's button
+  (`\"ui-collapsible-trigger\"`)."
+  disclosure/trigger-tag)
+
+(def disclosure-panel-tag
+  "Tag name of the panel (`\"ui-collapsible-panel\"`)."
+  disclosure/panel-tag)
 
 (defn command
   "Renders a headless ui-sdk Command with an initially empty native input.

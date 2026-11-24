@@ -223,6 +223,49 @@ The elements are bundled like the switch's, by
 `resources/public/re-frame-component/ui-sdk/tree.js`. Re-run that script after
 changing the pinned `@ui-sdk/web` version and commit the asset.
 
+## Collapsible (disclosure)
+
+```clojure
+(ns example.view
+  (:require [com.zihao.re-frame-component.interface :as component]))
+
+[component/disclosure
+ {:open? toolset-open?                       ; omit to let the element own it
+  :on-open-change (fn [next] (save-open! next))
+  :attrs {:class "context-section"}
+  :button-attrs {:class "context-trigger"}
+  :panel-attrs {:class "context-panel"}
+  :trigger-children (list [:span "Toolset"]
+                          (component/disclosure-chevron
+                           {:class "context-toggle"}))
+  :panel-children (list [:p "read_file"])}]
+```
+
+One panel a person opens and closes. ui-sdk's `ui-collapsible`,
+`ui-collapsible-trigger` and `ui-collapsible-panel` supply the ARIA disclosure
+pattern: Enter and Space on the trigger, focus returning to the trigger when a
+closed panel had it, find in page, and `data-open` / `data-closed` /
+`data-disabled` on every part. The trigger wraps **your** native button, whose
+type is always `button`, so a disclosure inside a form never submits it. This
+namespace owns no styles, copy or state.
+
+`:open?` is written onto the element as live state, and `:on-open-change` reports
+only what a person changed (a press, an arrow key, find in page) — never the
+caller's own write. Return `false` from it to keep the current state while a save
+runs. Omit `:open?` and the element owns the state, which is the right shape for
+a row nobody else needs to know about.
+
+A closed panel stays in the page, hidden, unless you pass `:keep-mounted? false`,
+so a panel keeps its scroll position and whatever is half-typed inside it.
+`component/disclosure-chevron` is the one glyph every disclosure in an app should
+use; paint it with a class whose rule rotates it from the trigger's `data-open`
+hook, so the arrow cannot disagree with what is on screen.
+
+The elements are bundled like the switch's, by
+`npm run re-frame-component:ui-sdk-assets`, into
+`resources/public/re-frame-component/ui-sdk/collapsible.js`. Re-run that script
+after changing the pinned `@ui-sdk/web` version and commit the asset.
+
 ## Other public primitives
 
 All exports retain the namespace `com.zihao.re-frame-component.interface`.

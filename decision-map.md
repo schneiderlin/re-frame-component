@@ -16,9 +16,12 @@ Canonical decisions:
   selection, with `data-row-action` marking a control hosted inside a row so its
   presses stay its own. All behind plain Clojure data; callers keep placement
   policy, copy, styling and whatever snapshot of the text they want. The `.model`
-  namespaces keep each element contract pure. Each binding is the same shape: one
-  bundled module under `resources/public/re-frame-component/ui-sdk/`, a DOM write
-  rule, and no paint.
+  namespaces keep each element contract pure. `ui/disclosure` owns one panel a
+  person opens: the ARIA disclosure pattern, the trigger's press, focus returned
+  on close, and `data-open` / `data-closed` on every part, with the shared
+  `disclosure-chevron` glyph and a `disclosure-markup` contract a `.cljc` renderer
+  can build on the JVM. Each binding is the same shape: one bundled module under
+  `resources/public/re-frame-component/ui-sdk/`, a DOM write rule, and no paint.
 - [Web Design System](../../docs/decisions/design-system.md)
   Affects: interaction components remain visual-identity-neutral and own their
   accessibility and overlay mechanics; the Catalog hosts app-supplied fixed

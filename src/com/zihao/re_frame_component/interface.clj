@@ -5,7 +5,8 @@
    [com.zihao.re-frame-component.playbook.model :as playbook-model]
    [com.zihao.re-frame-component.playbook.route :as playbook-route]
    [com.zihao.re-frame-component.router.activation :as router-activation]
-   [com.zihao.re-frame-component.router.model :as router-model]))
+   [com.zihao.re-frame-component.router.model :as router-model]
+   [com.zihao.re-frame-component.ui.disclosure.model :as disclosure-model]))
 
 (defn playbook-scene-id
   "Builds the conventional stable scene id of one module state.
@@ -529,3 +530,29 @@
   Returns: the hash href string of the route."
   [table route]
   (router-model/route-location table route))
+
+(defn disclosure-markup
+  "Returns the element tree of one disclosure without mounting it.
+
+  The JVM half of `disclosure`: a `.cljc` renderer that must stay provable
+  without a DOM builds the same elements a browser would mount. Parameters are
+  the ones `disclosure` documents — `:open?`, `:trigger-children`,
+  `:panel-children` and the painting maps.
+
+  Returns: hiccup `[root attrs [trigger attrs [button attrs ...content]]
+  [panel attrs ...content]]` for the shared element tags."
+  [props]
+  (disclosure-model/markup props))
+
+(defn disclosure-chevron
+  "The shared disclosure chevron, for a trigger's content.
+
+  Parameters:
+  - `attrs` — optional map merged onto the `<svg>`; pass the caller's class,
+    whose paint rotates the glyph from the trigger's `data-open`.
+
+  Returns: hiccup `<svg>` for one stroke chevron pointing right."
+  ([]
+   (disclosure-model/chevron))
+  ([attrs]
+   (disclosure-model/chevron attrs)))
