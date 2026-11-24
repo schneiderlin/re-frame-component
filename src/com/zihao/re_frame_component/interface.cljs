@@ -14,6 +14,7 @@
    [com.zihao.re-frame-component.ui.filter-select.interface :as filter-select]
    [com.zihao.re-frame-component.ui.anchor.interface :as anchor]
    [com.zihao.re-frame-component.ui.ime-safe.interface :as ime-safe]
+   [com.zihao.re-frame-component.ui.landing.interface :as landing]
    [com.zihao.re-frame-component.ui.multi-step.interface :as multi-step]
    [com.zihao.re-frame-component.ui.navbar.interface :as navbar]
    [com.zihao.re-frame-component.ui.optional-range.interface :as optional-range]
@@ -374,6 +375,45 @@
   Returns: a handle map with `:stop`, to call when the element unmounts."
   [element options]
   (anchor/bind-layer! element options))
+
+(def landed-attribute
+  "The attribute a landed element carries: `data-landed`.
+
+  Paint it, never read it as state: it is a DOM fact about where a jump brought
+  the reader, not app state. Exactly one element carries it; it moves to the next
+  landing and dies with its element."
+  landing/landed-attribute)
+
+(defn land!
+  "Brings a target into view, focuses it, flashes it, and marks it as landed.
+
+  This is an imperative DOM behavior, not a component: the caller keeps the
+  address (which row, which annotation, whether the target can be found yet) and
+  calls this once it holds the element.
+
+  In order: the previously landed element loses its mark, the target scrolls to
+  the middle of its container, gets `tabindex=\"-1\"` when it has no tabindex and
+  takes focus without a second scroll, plays a fading ring (skipped under
+  `prefers-reduced-motion: reduce`), and carries `data-landed`.
+
+  The mark is a fact, not a timer: scrolling and pressing do not clear it. It
+  moves to the next landing and disappears with the element, so the flash can be
+  a plain DOM animation rather than a timer racing the paint.
+
+  Parameters:
+  - `element` — the target element, already found. A detached element is not a
+    landing and is reported as `false`.
+  - `options` — optional:
+    - `:behavior` — `:auto` (default, instant) or `:smooth`.
+    - `:block` — vertical alignment; `:center` by default.
+    - `:flash?` — `true` by default; `false` re-centres and re-focuses while the
+      layout settles, without a second flash.
+
+  Returns: `true` when the element was connected and landed."
+  ([element]
+   (landing/land! element))
+  ([element options]
+   (landing/land! element options)))
 
 (defn ime-safe-input
   "Renders an input that survives IME composition.

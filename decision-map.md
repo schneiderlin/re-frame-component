@@ -26,3 +26,10 @@ Canonical decisions:
   Affects: interaction components remain visual-identity-neutral and own their
   accessibility and overlay mechanics; the Catalog hosts app-supplied fixed
   tool destinations without owning product tokens or visual systems.
+- [A Landing Marks Its Target As A Fact](../../docs/decisions/landing-highlight.md)
+  Affects: `ui/landing` and its interface own the arrival — the previous mark is
+  removed, the target is centred, focused and flashed, and carries `data-landed`
+  — while the address stays with the surface that can answer it. The mark is a
+  DOM fact rather than app state, so nothing clears it on scroll or on a press;
+  the flash is a DOM animation because the attribute does not change between two
+  landings on the same element.
