@@ -655,6 +655,9 @@
       or `id` on the button; the element owns them.
     - `:trigger-children` — the button's content: the caller's label plus
       usually `(disclosure-chevron {:class ...})`.
+    - `:body-children` — optional content that always shows, between the trigger
+      and the panel: what a row whose trigger is only its chevron must keep
+      outside the button.
     - `:panel-children` — the panel's content.
 
   Returns: Hiccup vector for the disclosure. The caller owns the styles, the

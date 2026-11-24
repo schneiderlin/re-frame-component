@@ -30,6 +30,27 @@
     (testing "the panel is the root's third part"
       (is (= (keyword model/panel-tag) (first panel))))))
 
+(deftest content-between-the-trigger-and-the-panel-always-shows
+  ;; A row whose trigger is only its chevron still has a summary and actions, and
+  ;; those must not live inside the button.
+  (let [markup (model/markup {:trigger-children [(model/chevron)]
+                              :body-children [[:div {:data-part "summary"} "read_file"]
+                                              [:span {:data-part "actions"} "->"]]
+                              :panel-children [[:p "detail"]]})
+        [root-tag root-attrs trigger] markup]
+    (is (= (keyword model/root-tag) root-tag))
+    (is (= {} root-attrs))
+    (testing "the parts read trigger, body, panel in that order"
+      (is (= [(keyword model/trigger-tag)
+              :div
+              :span
+              (keyword model/panel-tag)]
+             (mapv first (drop 2 markup))))
+      (is (= [:p] (mapv first (drop 2 (last markup)))))))
+  (testing "a disclosure with no body is the same three parts"
+    (is (= [(keyword model/trigger-tag) (keyword model/panel-tag)]
+           (mapv first (drop 2 (model/markup {})))))))
+
 (deftest a-closed-panel-starts-hidden-and-an-open-one-does-not
   (testing "a panel that starts closed is hidden before the elements upgrade"
     (is (true? (:hidden (:panel-attrs (parts (model/markup {}))))))

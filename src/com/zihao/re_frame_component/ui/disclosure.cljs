@@ -123,10 +123,18 @@
       ;; hook is what starts the load: the first pass draws nothing, and the
       ;; state flip re-renders every mounted disclosure with the element in
       ;; place.
+      ;; The elements render only once their definitions are loaded, so the mount
+      ;; hook is what starts the load. The ref does the wiring as well as the
+      ;; bookkeeping: a disclosure that mounts *after* the elements are ready gets
+      ;; its node and its listeners in the same commit, instead of depending on a
+      ;; later render to arrive.
       :reagent-render
       (fn [props]
         (when (or (elements-ready?) (= :ready @elements-state))
-          (assoc-in (model/markup props) [1 :ref] #(reset! node* %))))})))
+          (assoc-in (model/markup props) [1 :ref]
+                    (fn [node]
+                      (reset! node* node)
+                      (when node (sync! props))))))})))
 
 (defn disclosure
   "Renders one disclosure: a trigger a person presses and the panel it shows.
@@ -153,6 +161,9 @@
        them.
      - `:trigger-children` — the button's content: the caller's label, plus
        usually `(disclosure-chevron {:class ...})`.
+     - `:body-children` — optional content that always shows, between the trigger
+       and the panel: a row whose trigger is only its chevron keeps its summary
+       and its actions here, because those cannot live inside a button.
      - `:panel-children` — the panel's content.
 
    Returns: Reagent hiccup for the disclosure, or nil while its elements load. The

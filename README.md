@@ -255,6 +255,17 @@ caller's own write. Return `false` from it to keep the current state while a sav
 runs. Omit `:open?` and the element owns the state, which is the right shape for
 a row nobody else needs to know about.
 
+A row whose trigger is only its chevron keeps everything else in
+`:body-children`, which always shows between the trigger and the panel:
+
+```clojure
+[component/disclosure
+ {:open? row-open?
+  :trigger-children (list (component/disclosure-chevron {:class "row-toggle"}))
+  :body-children (list [:div (summary-of row)] [:span (actions-for row)])
+  :panel-children (list detail)}]
+```
+
 A closed panel stays in the page, hidden, unless you pass `:keep-mounted? false`,
 so a panel keeps its scroll position and whatever is half-typed inside it.
 `component/disclosure-chevron` is the one glyph every disclosure in an app should

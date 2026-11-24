@@ -26,6 +26,8 @@
       caller's painting and test hooks on each part.
     - `:trigger-children` — the button's content: the caller's label plus
       usually `(chevron {:class ...})`.
+    - `:body-children` — optional content that always shows, between the trigger
+      and the panel.
     - `:panel-children` — the panel's content.
 
   Returns: Reagent hiccup whose parts carry `data-open` / `data-closed` (and

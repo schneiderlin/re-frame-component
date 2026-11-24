@@ -156,11 +156,16 @@
         (reset! listening?* false))
       ;; The elements render only once their definitions are loaded, so the mount
       ;; hook is what starts the load: the first pass draws nothing, and the
-      ;; state flip re-renders every mounted tree with the element in place.
+      ;; state flip re-renders every mounted tree with the element in place. The
+      ;; ref wires as well as records, so a tree that mounts after the elements are
+      ;; ready is live in the same commit.
       :reagent-render
       (fn [props]
         (when (or (elements-ready?) (= :ready @elements-state))
-          (assoc-in (model/markup props) [1 :ref] #(reset! node* %))))})))
+          (assoc-in (model/markup props) [1 :ref]
+                    (fn [node]
+                      (reset! node* node)
+                      (when node (sync! props))))))})))
 
 (defn tree
   "Renders one controlled tree.

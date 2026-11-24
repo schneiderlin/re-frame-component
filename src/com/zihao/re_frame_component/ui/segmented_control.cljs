@@ -120,11 +120,16 @@
         (reset! listening?* false))
       ;; The elements render only once their definitions are loaded, so the mount
       ;; hook is what starts the load: the first pass draws nothing, the state
-      ;; flip re-renders every mounted control with the element in place.
+      ;; flip re-renders every mounted control with the element in place. The ref
+      ;; wires as well as records, so a control that mounts after the elements are
+      ;; ready is live in the same commit.
       :reagent-render
       (fn [props]
         (when (or (elements-ready?) (= :ready @elements-state))
-          (assoc-in (model/markup props) [1 :ref] #(reset! node* %))))})))
+          (assoc-in (model/markup props) [1 :ref]
+                    (fn [node]
+                      (reset! node* node)
+                      (when node (sync! props))))))})))
 
 (defn segmented-control
   "Renders one controlled segmented control.

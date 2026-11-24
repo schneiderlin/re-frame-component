@@ -48,8 +48,8 @@
   "Props the component keeps in Clojure data or writes as live state, never
    rendered as ordinary attributes."
   [:open? :default-open? :on-open-change :on-ref :disabled? :attrs
-   :trigger-attrs :button-attrs :panel-attrs :trigger-children :panel-children
-   :keep-mounted? :hidden-until-found?])
+   :trigger-attrs :button-attrs :panel-attrs :trigger-children :body-children
+   :panel-children :keep-mounted? :hidden-until-found?])
 
 (defn- flag-attribute
   "A boolean the element reads by value.
@@ -121,19 +121,25 @@
      - `:panel-attrs` — optional map merged onto the panel.
      - `:trigger-children` — the button's content, in order: the caller's label
        and usually one `chevron`.
+     - `:body-children` — content that always shows, between the trigger and the
+       panel: the summary and the actions of a row whose trigger is only its
+       chevron, because those must not live inside a button.
      - `:panel-children` — the panel's content, kept mounted while closed.
 
    Returns: hiccup `[root attrs [trigger attrs [button attrs ...content]]
-   [panel attrs ...content]]`, free of the open state when the caller omits it.
+   ...body [panel attrs ...content]]`, free of the open state when the caller
+   omits it.
 
    Pure, so the DOM contract the behavior expects is testable without a browser."
-  [{:keys [trigger-children panel-children] :as props}]
-  [(keyword root-tag)
-   (root-attrs props)
-   [(keyword trigger-tag)
-    (trigger-attrs props)
-    (into [:button (button-attrs props)] (or trigger-children []))]
-   (into [(keyword panel-tag) (panel-attrs props)] (or panel-children []))])
+  [{:keys [trigger-children body-children panel-children] :as props}]
+  (into [(keyword root-tag)
+         (root-attrs props)
+         [(keyword trigger-tag)
+          (trigger-attrs props)
+          (into [:button (button-attrs props)] (or trigger-children []))]]
+        (concat body-children
+                [(into [(keyword panel-tag) (panel-attrs props)]
+                       (or panel-children []))])))
 
 (defn chevron
   "One chevron for a disclosure's button.
