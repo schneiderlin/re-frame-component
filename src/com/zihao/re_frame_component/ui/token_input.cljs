@@ -22,9 +22,19 @@
 
    Callers see plain Clojure data and paint it themselves: a value is a vector of
    strings and token maps (`{:type \"file\" :value \"src/routes.ts\" :label \"routes.ts\"}`),
-   and a suggestion source is a function of the query. This namespace owns no
-   styles, no copy and no state."
+   and a suggestion source is a function of the query. That paint is data, not a
+   component tree: this namespace writes it into the template's content as DOM, so
+   an `on-*` handler has no reader and a component function cannot run. This
+   namespace owns no styles, no copy and no state.
+
+   The token template is filled here, not by the renderer. The elements build a
+   token by cloning `template.content`; React appends children to the `<template>`
+   element itself, where the browser never looks, so a template rendered the usual
+   way clones to nothing and every chip paints blank. The markup renders the
+   template empty and `fill-template!` installs `model/token-template` into the
+   fragment the elements actually read."
   (:require
+   [clojure.string :as str]
    [com.zihao.re-frame-component.ui.token-input.model :as model]
    [reagent.core :as r]))
 
@@ -142,6 +152,79 @@
           (set! (.-triggers menu)
                 (clj->js (mapv #(trigger->js sources* %) triggers))))))))
 
+;; ---------------------------------------------------------------------------
+;; The token template. The elements clone `template.content` for each token, and
+;; only a browser parse fills that fragment — so the markup renders the template
+;; empty and the binding writes the caller's token mark into it here. This is the
+;; one place a token's paint becomes DOM; `model/token-template` stays data.
+
+(defn- attribute-text
+  "One attribute value as the text a DOM attribute holds.
+
+   A sequential value (a caller's `:class` vector) is space-joined; keywords and
+   symbols are written by name. Booleans and `nil` are handled by the caller.
+   Anything else — a map, a function — has no attribute spelling and is skipped."
+  [value]
+  (cond
+    (string? value) value
+    (keyword? value) (name value)
+    (symbol? value) (name value)
+    (number? value) (str value)
+    (sequential? value) (str/join " " (keep attribute-text value))
+    :else nil))
+
+(defn- write-attrs!
+  "Writes one hiccup attribute map onto a DOM element.
+
+   `:style` takes a map of property → value; every other key is an attribute name.
+   A `true` value is presence-only, `false` drops the attribute, and values with
+   no attribute spelling (see `attribute-text`) are ignored."
+  [^js element attrs]
+  (doseq [[key value] attrs]
+    (let [attribute (name key)]
+      (cond
+        (and (= "style" attribute) (map? value))
+        (doseq [[property style-value] value]
+          (when (some? style-value)
+            (.setProperty (.-style element) (name property) (str style-value))))
+
+        (true? value) (.setAttribute element attribute "")
+        (false? value) (.removeAttribute element attribute))
+      (when-some [text (and (not (map? value)) (attribute-text value))]
+        (.setAttribute element attribute text)))))
+
+(defn- materialize!
+  "Appends one data tree (strings, numbers and hiccup vectors) to a DOM parent."
+  [^js parent node]
+  (cond
+    (nil? node) nil
+
+    (or (string? node) (number? node))
+    (.appendChild parent (.createTextNode js/document (str node)))
+
+    (sequential? node)
+    (let [[tag attrs children] (if (map? (second node))
+                                 [(first node) (second node) (drop 2 node)]
+                                 [(first node) {} (rest node)])
+          element (.createElement js/document (name tag))]
+      (write-attrs! element attrs)
+      (doseq [child children] (materialize! element child))
+      (.appendChild parent element))
+
+    :else nil))
+
+(defn- fill-template!
+  "Installs the caller's token mark into the template's content, once.
+
+   Idempotent: the content outlives every re-render of the markup, and a filled
+   template is what already-rendered chips were cloned from. It runs before the
+   seed, because a draft that arrives holding tokens renders them immediately."
+  [^js node props]
+  (when-let [^js template (.querySelector node ":scope > template")]
+    (let [content (.-content template)]
+      (when-not (.-firstElementChild content)
+        (materialize! content (model/token-template props))))))
+
 (defn- change-detail
   [^js dom-event]
   (let [^js detail (.-detail dom-event)]
@@ -149,15 +232,30 @@
      :input-type (some-> detail .-inputType)
      :removed (js->clj (or (some-> detail .-removed) #js []) :keywordize-keys true)}))
 
+(defn- event-value
+  "The value a `valuechange` event carries, as Clojure data.
+
+   The element reports the new value *before* it stores it, so while this listener
+   runs the node's own `value` still holds the previous one — read from the node and
+   every report is one edit behind. The detail is the only reading that is current."
+  [^js dom-event]
+  (let [value (some-> dom-event .-detail .-value)]
+    (when (some? value)
+      (try
+        (js->clj value :keywordize-keys true)
+        (catch :default _ nil)))))
+
 (defn- report-change
   "Reports one edit to the caller.
 
    The element owns the text, so this is a notification, not a request: nothing
-   here writes the value back."
+   here writes the value back. The value comes from the event (`event-value`), since
+   the element has not stored it yet."
   [{:keys [node* handler*]} ^js dom-event]
   (when-let [^js node @node*]
     (when-let [handler @handler*]
-      (handler (read-value node) (change-detail dom-event)))))
+      (handler (or (event-value dom-event) (read-value node))
+               (change-detail dom-event)))))
 
 (defn- set-composing!
   "Marks the window in which an input method is composing.
@@ -208,12 +306,15 @@
         runtime)))
 
 (defn- sync!
-  "Pushes the seed, the attributes, the triggers and the handle onto one element.
+  "Pushes the seed, the template, the attributes, the triggers and the handle onto
+   one element.
 
-   The seed is written when `:value-key` changes — a Thread switch, a reset after
-   sending, a host prefill. It is never written because the caller re-rendered:
-   setting `value` is an undoable step that moves the caret to the end, so a model
-   copy that is one turn behind must not be able to drag the text backwards."
+   The template's content goes first: a chip is cloned from it, so the mark has to
+   be there before any value renders a token. The seed is written when
+   `:value-key` changes — a Thread switch, a reset after sending, a host prefill.
+   It is never written because the caller re-rendered: setting `value` is an
+   undoable step that moves the caret to the end, so a model copy that is one turn
+   behind must not be able to drag the text backwards."
   [{:keys [node* handler* seed-key* sources* triggers* listening?* blur-handler*
            paste-handler* on-valuechange on-paste on-compositionstart
            on-compositionend on-focusout]}
@@ -223,6 +324,9 @@
   (reset! paste-handler* (:on-paste props))
   (when-let [^js node @node*]
     (reset! sources* (:sources props))
+    ;; The template a token clones must hold its mark before the value renders a
+    ;; token: a restored draft writes the seed in this same pass.
+    (fill-template! node props)
     (when (not= (:value-key props) @seed-key*)
       (reset! seed-key* (:value-key props))
       (write-value! node (:initial-value props)))
@@ -292,7 +396,9 @@
        `getValue`, `setValue`, `getText`, `getLabel`, `clear`, `focus`, …). This is
        how a caller reads the text at submit, because the text lives here.
      - `:on-change` — optional function of `(value details)`, called after every
-       edit, menu choice, undo and token removal. `details` carries `:reason`
+       edit, menu choice, undo and token removal, with the value the change
+       produced (read from the event: the element stores it after reporting).
+       `details` carries `:reason`
        (`\"input-change\"`, `\"remove-press\"`, `\"imperative\"`, …), `:input-type`
        and `:removed` (the tokens a change dropped).
      - `:on-paste` — optional function of one paste event, called from the root
@@ -314,7 +420,10 @@
      - `:attrs`, `:editor-attrs`, `:token-attrs`, `:token-label-attrs`,
        `:token-remove-attrs`, `:remove-token-label`, `:menu-attrs`,
        `:menu-content-attrs`, `:menu-list-attrs`, `:menu-empty` — optional paint,
-       as described on `model/markup`.
+       as described on `model/markup`. Token paint is **data the binding writes as
+       DOM** (`model/token-template` → the template's content), so it takes
+       attributes, strings and element hiccup — not `on-*` handlers, and not
+       component functions.
 
    Returns: Reagent hiccup for the token input, or nil while its elements load.
    The caller owns every visual class, every label and every placeholder."

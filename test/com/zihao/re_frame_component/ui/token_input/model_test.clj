@@ -3,25 +3,42 @@
    [clojure.test :refer [deftest is testing]]
    [com.zihao.re-frame-component.ui.token-input.model :as model]))
 
-(deftest token-input-markup-holds-an-editor-and-a-token-template
+(deftest token-input-markup-holds-an-editor-and-an-empty-template
   (let [markup (model/markup {:id "composer-input"
                               :editor-attrs {:placeholder "Type"
                                              :data-composer-textarea "true"}})
-        [input input-attrs editor template] markup
-        token (last template)]
+        [input input-attrs editor template] markup]
     (testing "the root is the element the binding drives"
       (is (= (keyword model/input-tag) input))
       (is (= "composer-input" (:id input-attrs))))
     (testing "the editor carries only what the caller paints"
       (is (= (keyword model/editor-tag) (first editor)))
       (is (= {:placeholder "Type" :data-composer-textarea "true"} (second editor))))
-    (testing "a template holds one token with a label span and a remove part"
-      (is (= :template (first template)))
-      (is (= (keyword model/token-tag) (first token)))
-      (let [[label-span remove-part] (drop 2 token)]
-        (is (= :span (first label-span)))
-        (is (contains? (second label-span) :data-token-label))
-        (is (= (keyword model/token-remove-tag) (first remove-part)))))))
+    (testing "the template is rendered empty"
+      ;; The elements clone `template.content`, and only a browser parse fills it:
+      ;; a child React rendered would sit on the `<template>` element, where a clone
+      ;; never looks, and every chip would paint blank. The token is `token-template`
+      ;; and the binding installs it into the content.
+      (is (= [:template model/template-attrs] template)))))
+
+(deftest token-template-is-the-chip-the-elements-clone
+  (let [mark [:svg {:width 12 :height 12} [:path {:d "M18 6 6 18"}]]
+        [tag attrs label-span remove-part]
+        (model/token-template {:token-attrs {:class ["composer-token" "extra"]}
+                               :token-label-attrs {:class "composer-token-label"}
+                               :token-remove-attrs {:class "composer-token-remove"
+                                                    :aria-label "Remove"}
+                               :remove-token-label mark})]
+    (testing "the chip is the element's token, painted by the caller"
+      (is (= (keyword model/token-tag) tag))
+      (is (= {:class ["composer-token" "extra"]} attrs)))
+    (testing "the label span is the one the element fills with the token's label"
+      (is (= :span (first label-span)))
+      (is (= {:class "composer-token-label" :data-token-label ""} (second label-span))))
+    (testing "the remove part carries the caller's mark as data"
+      (is (= (keyword model/token-remove-tag) (first remove-part)))
+      (is (= {:class "composer-token-remove" :aria-label "Remove"} (second remove-part)))
+      (is (= [:span {} mark] (last remove-part))))))
 
 (deftest token-input-markup-never-renders-the-driven-props
   (testing "value, triggers and callbacks are written onto the node, not rendered"
@@ -80,9 +97,8 @@
                         (= "No matches" (last %)))
                   (tree-seq vector? rest markup)))))))
 
-(deftest token-input-markup-renders-the-remove-affordance-when-given
-  (let [template (nth (model/markup {:remove-token-label "x"}) 3)
-        token (last template)
+(deftest token-template-renders-the-remove-affordance-when-given
+  (let [token (model/token-template {:remove-token-label "x"})
         remove-part (last token)]
     (is (= (keyword model/token-remove-tag) (first remove-part)))
     (is (= "x" (last (last remove-part))))))

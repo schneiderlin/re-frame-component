@@ -44,7 +44,8 @@
 (def template-attrs
   "Attributes of the `<template>` a token is cloned from.
 
-   Empty on purpose: every visual hook lives on the token element inside it."
+   Empty on purpose: every visual hook lives on the token element the binding
+   materializes into the template's content, never on the `<template>` itself."
   {})
 
 (def ^:private driven-props
@@ -87,7 +88,27 @@
   ;; label, so the caller can style it without rendering text of its own.
   [:span (assoc (passthrough token-label-attrs) :data-token-label "")])
 
-(defn- token-element
+(defn token-template
+  "The markup of one token chip, as data the binding installs into the template.
+
+   The elements build a token by cloning `template.content` and then fill its
+   `[data-token-label]` descendant with the token's label. That fragment is the
+   one place a `<template>`'s markup can live: React appends children to the
+   `<template>` element itself, where the browser never looks, so a template
+   React filled would clone to nothing and every chip would paint blank. The
+   template is therefore rendered empty and the binding writes this tree into its
+   content — see `ui.token-input` and `sdk-picker`, which materializes a row
+   template the same way.
+
+   Parameters:
+   - `props` — the map `markup` takes; `:token-attrs`, `:token-label-attrs`,
+     `:token-remove-attrs` and `:remove-token-label` are read.
+
+   Returns: hiccup data for one token: the caller's paint as attributes, the
+   label span the element fills, and the remove part. It is **data**, not a
+   component tree — the binding writes it as DOM, where an `on-*` handler has no
+   reader and a component function cannot run; a caller's mark (an icon's `svg`
+   hiccup, say) is copied as elements."
   [{:keys [token-attrs token-label-attrs token-remove-attrs remove-token-label]}]
   [(keyword token-tag) (passthrough token-attrs)
    (token-label-element {:token-label-attrs token-label-attrs})
@@ -97,9 +118,13 @@
       [:span {} remove-token-label])]])
 
 (defn- template-element
-  [props]
-  [:template template-attrs
-   (token-element props)])
+  "The empty template the elements clone a token from.
+
+   Empty on purpose: the binding installs `token-template` into its content, which
+   is the fragment a clone reads. React cannot do that for us — it appends children
+   to the `<template>` element, not to the template content the browser clones."
+  []
+  [:template template-attrs])
 
 (defn- trigger-menu-element
   [{:keys [menu-attrs menu-content-attrs menu-list-attrs menu-empty]}]
@@ -137,9 +162,10 @@
      - `:editor-attrs` — optional map merged onto the editor (`:placeholder`,
        `aria-label`, `:class`).
      - `:token-attrs`, `:token-label-attrs`, `:token-remove-attrs` — optional maps
-       painted on each token's parts inside the `<template>`.
-     - `:remove-token-label` — optional markup for the remove part; the element
-       hides it from assistive technology, so it is usually an icon.
+       painted on each token's parts; they travel through `token-template`, which
+       the binding writes into the template's content.
+     - `:remove-token-label` — optional data markup for the remove part (usually an
+       icon's `svg` hiccup); the element hides it from assistive technology.
      - `:menu-attrs`, `:menu-content-attrs`, `:menu-list-attrs` — optional maps
        for the suggestion menu, its popup and its listbox.
      - `:menu-empty` — optional `{:text ... :attrs ...}`; when absent no empty
@@ -151,10 +177,11 @@
        string `\"false\"` would read as true.
 
    Returns: hiccup `[ui-token-input ...]` holding the editor, the token
-   `<template>`, and — only when `trigger-menu?` — the suggestion menu."
+   `<template>` (empty: see `token-template`), and — only when `trigger-menu?` —
+   the suggestion menu."
   [props]
   (cond-> [(keyword input-tag) (element-attrs props)
            [(keyword editor-tag) (editor-attrs props)]
-           (template-element props)]
+           (template-element)]
     (trigger-menu? props)
     (conj (trigger-menu-element props))))

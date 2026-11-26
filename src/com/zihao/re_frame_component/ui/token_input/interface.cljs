@@ -41,9 +41,23 @@
     the handlers are dropped, since the binding writes them onto the DOM node).
 
   Returns: hiccup `[ui-token-input ...]` holding the editor, the token
-  `<template>` and — only when a trigger has a source — the suggestion menu."
+  `<template>` (empty: the binding installs `token-template` into its content) and
+  — only when a trigger has a source — the suggestion menu."
   [props]
   (model/markup props))
+
+(defn token-template
+  "The markup of one token chip, as data the binding installs into the template.
+
+  Parameters:
+  - `props` — the maps `token-input` takes; `:token-attrs`, `:token-label-attrs`,
+    `:token-remove-attrs` and `:remove-token-label` are read.
+
+  Returns: hiccup data for one token: the caller's paint as attributes, the label
+  span the element fills, and the remove part. It is data, not a component tree —
+  the binding writes it as DOM, so `on-*` handlers have no reader here."
+  [props]
+  (model/token-template props))
 
 (defn trigger-menu?
   "Whether `props` describe a suggestion menu worth mounting."
