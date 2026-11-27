@@ -713,7 +713,8 @@
   is rendered separately (`[data-command-description]`) for styling as a second
   line; the label uses `[data-command-label]`.
 
-  Results appear only for a non-blank query. Activation clears the query before
+  Results appear only for a non-blank query unless `:show-idle?` is true.
+   Activation clears the query before
   invoking `:on-select` with the item's value. `:empty-label` defaults to
   \"No results\". `:input-attrs` styles and names the native input (supply an
   accessible name); `:attrs` extends `ui-command`. `:part-attrs` styles the

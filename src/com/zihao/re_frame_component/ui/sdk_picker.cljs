@@ -85,13 +85,13 @@
    (when (seq description)
      [:span (assoc (:description parts) :data-command-description "") description])])
 
-(defn- command-markup [querying? {:keys [items attrs input-attrs empty-label part-attrs]}]
+(defn- command-markup [querying? {:keys [items attrs input-attrs empty-label part-attrs show-idle?]}]
   [:ui-command (dissoc attrs :value :default-value :query :default-query
                        :pages :default-pages :items)
    [:ui-command-input (input-markup input-attrs)]
-   [:div (assoc (:content part-attrs) :data-command-results "" :hidden (not querying?))
+   [:div (assoc (:content part-attrs) :data-command-results "" :hidden (not (or querying? show-idle?)))
     (into [:ui-command-list (:list part-attrs)]
-          (when querying? (map (partial command-item part-attrs) items)))
+          (when (or querying? show-idle?) (map (partial command-item part-attrs) items)))
     [:ui-command-empty [:span (:empty part-attrs) (or empty-label "No results")]]]])
 
 (defn- bind-command! [querying? ^js node ^js input]
@@ -107,7 +107,7 @@
         ;; that depend on our additional visibility rule after SDK updates.
         observer (js/MutationObserver. sync-aria!)
         set-querying! (fn [query]
-                        (let [active? (not (str/blank? query))]
+                        (let [active? (or (:show-idle? @props*) (not (str/blank? query)))]
                           (reset! querying? active?)
                           ;; Reflect visibility before the host can move focus.
                           (set! (.-hidden results) (not active?))
@@ -118,8 +118,8 @@
                         (fn [^js event]
                           ;; `valuechange` is highlight, not activation.
                           (let [value (.. event -detail -value)
-                                {:keys [items on-select]} @props*]
-                            (when (and (not (str/blank? (.-query node)))
+                                {:keys [items on-select show-idle?]} @props*]
+                            (when (and (or show-idle? (not (str/blank? (.-query node))))
                                        (some #(= value (:value %)) items))
                               (set! (.-query node) "")
                               (set-querying! "")
