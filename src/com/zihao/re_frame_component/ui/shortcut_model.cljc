@@ -9,7 +9,7 @@
     (when (and (not (or composing? repeat? alt-graph?))
                (or function-key?
                    (and (or meta? ctrl? alt?)
-                        (re-matches #"[a-z0-9]|arrow(?:up|down|left|right)|enter|backspace|delete|home|end|pageup|pagedown| " key))))
+                        (re-matches #"^(?:[a-z0-9]|arrow(?:up|down|left|right)|enter|backspace|delete|home|end|pageup|pagedown| )$" key))))
       (str/join "+" (cond-> [] meta? (conj "meta") ctrl? (conj "ctrl")
                             alt? (conj "alt") shift? (conj "shift")
                             true (conj (if (= " " key) "space" key)))))))
