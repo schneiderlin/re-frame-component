@@ -5,14 +5,25 @@
 
 (defonce ^:private sdk (r/atom nil))
 (def ^:private sdk-module
-  (delay (-> (js* "import('/re-frame-component/ui-sdk/shortcuts.js')")
-             (.then #(reset! sdk %)))))
+  (delay
+    (js/Promise.
+     (fn [resolve _reject]
+       (let [script (js/document.createElement "script")]
+         (set! (.-type script) "module")
+         (set! (.-src script) "/re-frame-component/ui-sdk/shortcuts-bridge.js")
+         (set! (.-onload script)
+               #(resolve (reset! sdk (obj/get js/globalThis "ReFrameComponentShortcuts"))))
+         (set! (.-onerror script)
+               (fn [error]
+                 (js/console.error "re-frame-component: failed to load shortcut SDK" error)
+                 (resolve nil)))
+         (.appendChild js/document.head script))))))
 
 (defn register! [keys-fn handler options]
   (let [cleanup* (volatile! nil)
         disposed? (volatile! false)]
     (.then @sdk-module (fn [module]
-                        (when-not @disposed?
+                        (when (and module (not @disposed?))
                           (vreset! cleanup* ((obj/get module "registerShortcut") keys-fn handler options)))))
     #(do (vreset! disposed? true) (when-let [cleanup @cleanup*] (cleanup)))))
 
